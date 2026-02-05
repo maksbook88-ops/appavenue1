@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Прайс / Безнал / Excel</title>
 
-  <!-- SheetJS (XLSX) для генерации Excel в браузере -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
@@ -32,165 +31,59 @@
         var(--bg);
       color:var(--text);
     }
-    header{
-      padding: 28px 20px 10px;
-      max-width: 1150px;
-      margin: 0 auto;
-    }
-    h1{
-      font-size: clamp(22px, 3vw, 34px);
-      margin: 0 0 8px;
-    }
-    header p{
-      margin:0 0 10px;
-      color:var(--muted);
-      line-height:1.5;
-      max-width: 980px;
-      font-size: 13px;
-    }
+    header{padding: 28px 20px 10px; max-width: 1150px; margin: 0 auto;}
+    h1{font-size: clamp(22px, 3vw, 34px); margin: 0 0 8px;}
+    header p{margin:0 0 10px; color:var(--muted); line-height:1.5; max-width: 980px; font-size: 13px;}
 
     .tabbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
-    .tab-btn{
-      background: transparent;
-      border:1px solid var(--border);
-      color: var(--text);
-      padding: 10px 12px;
-      border-radius: 999px;
-      font-weight: 750;
-      cursor:pointer
-    }
-    .tab-btn.active{
-      background: rgba(124,155,255,0.18);
-      border-color: rgba(124,155,255,0.45);
-    }
+    .tab-btn{background: transparent;border:1px solid var(--border);color: var(--text);padding: 10px 12px;border-radius: 999px;font-weight: 750;cursor:pointer}
+    .tab-btn.active{background: rgba(124,155,255,0.18);border-color: rgba(124,155,255,0.45);}
 
-    main{
-      max-width:1150px;
-      margin: 0 auto;
-      padding: 10px 20px 50px;
-      display:grid;
-      grid-template-columns: 1fr;
-      gap: 16px;
-    }
-    @media (min-width: 980px){
-      main{ grid-template-columns: 1fr 1fr; align-items:start; }
-    }
+    main{max-width:1150px;margin: 0 auto;padding: 10px 20px 50px;display:grid;grid-template-columns: 1fr;gap: 16px;}
+    @media (min-width: 980px){ main{ grid-template-columns: 1fr 1fr; align-items:start; } }
     .tab-panel{display:none}
     .tab-panel.active{display:block}
 
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent 30%), var(--panel);
-      border:1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 18px 18px 16px;
-    }
+    .card{background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent 30%), var(--panel);
+      border:1px solid var(--border);border-radius: var(--radius);box-shadow: var(--shadow);padding: 18px 18px 16px;}
     .card h2{font-size: 18px; margin: 0 0 10px;}
     .muted{color:var(--muted)}
     .small{font-size: 12.5px}
     .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
     .spacer{height:10px}
 
-    textarea{
-      width:100%;
-      min-height: 360px;
-      resize: vertical;
-      padding: 12px 12px;
-      background: var(--panel-2);
-      border:1px solid var(--border);
-      border-radius: 12px;
-      color: var(--text);
-      line-height:1.45;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size: 12.6px;
-    }
+    textarea{width:100%;min-height: 360px;resize: vertical;padding: 12px 12px;background: var(--panel-2);
+      border:1px solid var(--border);border-radius: 12px;color: var(--text);line-height:1.45;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;font-size: 12.6px;}
     input[type="text"], input[type="number"]{
-      padding: 10px 12px;
-      background: var(--panel-2);
-      border:1px solid var(--border);
-      border-radius: 12px;
-      color: var(--text);
-      outline:none;
-      font-size: 13px;
-    }
+      padding: 10px 12px;background: var(--panel-2);border:1px solid var(--border);border-radius: 12px;color: var(--text);outline:none;font-size: 13px;}
     input.compact{width: 120px}
     input.mid{width: 220px}
 
-    button{
-      appearance:none;
-      border:1px solid transparent;
-      background: linear-gradient(90deg, var(--accent), #9b7cff);
-      color:white;
-      padding: 10px 14px;
-      border-radius: 12px;
-      font-weight: 750;
-      cursor:pointer;
-      transition: transform .05s ease, filter .2s ease, opacity .2s ease;
-    }
+    button{appearance:none;border:1px solid transparent;background: linear-gradient(90deg, var(--accent), #9b7cff);
+      color:white;padding: 10px 14px;border-radius: 12px;font-weight: 750;cursor:pointer;
+      transition: transform .05s ease, filter .2s ease, opacity .2s ease;}
     button:hover{filter: brightness(1.05)}
     button:active{transform: translateY(1px)}
     button.secondary{background: transparent; border-color: var(--border); color: var(--text);}
     button.ghost{background: transparent; border-color: transparent; color: var(--muted);}
     button:disabled{ opacity: .55; cursor:not-allowed; }
 
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      font-size: 11.5px;
-      background: rgba(255,255,255,0.06);
-      border:1px solid var(--border);
-      color: var(--muted);
-      white-space: nowrap;
-    }
+    .pill{display:inline-flex;align-items:center;gap:6px;padding: 4px 8px;border-radius: 999px;font-size: 11.5px;
+      background: rgba(255,255,255,0.06);border:1px solid var(--border);color: var(--muted);white-space: nowrap;}
     .pill.ok{color: #d9ffe5; background: rgba(125,255,155,0.08); border-color: rgba(125,255,155,0.25)}
     .pill.bad{color: #ffe1e1; background: rgba(255,107,107,0.08); border-color: rgba(255,107,107,0.25)}
 
-    .hint{
-      padding: 10px 12px;
-      background: rgba(124,155,255,0.08);
-      border:1px solid rgba(124,155,255,0.28);
-      border-radius: 12px;
-      color: #e8ecff;
-    }
+    .hint{padding: 10px 12px;background: rgba(124,155,255,0.08);border:1px solid rgba(124,155,255,0.28);
+      border-radius: 12px;color: #e8ecff;}
 
-    .markup-bar{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:10px;
-      align-items:center;
-    }
-    .markup-btn{
-      background: transparent;
-      border:1px solid var(--border);
-      color: var(--text);
-      padding: 8px 10px;
-      border-radius: 999px;
-      font-weight: 800;
-      font-size: 12px;
-      line-height: 1;
-      cursor:pointer;
-    }
-    .markup-btn.active{
-      background: rgba(124,155,255,0.18);
-      border-color: rgba(124,155,255,0.45);
-    }
+    .markup-bar{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center;}
+    .markup-btn{background: transparent;border:1px solid var(--border);color: var(--text);padding: 8px 10px;border-radius: 999px;
+      font-weight: 800;font-size: 12px;line-height: 1;cursor:pointer;}
+    .markup-btn.active{background: rgba(124,155,255,0.18);border-color: rgba(124,155,255,0.45);}
 
-    .stats{
-      display:grid;
-      grid-template-columns: repeat(3, minmax(0,1fr));
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .stat{
-      background: var(--panel-2);
-      border:1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px 12px;
-    }
+    .stats{display:grid;grid-template-columns: repeat(3, minmax(0,1fr));gap: 10px;margin-top: 10px;}
+    .stat{background: var(--panel-2);border:1px solid var(--border);border-radius: 12px;padding: 10px 12px;}
     .stat .label{font-size: 11.5px; color: var(--muted)}
     .stat .value{font-size: 18px; font-weight: 850; margin-top: 2px}
     .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;}
@@ -201,9 +94,9 @@
   <header>
     <h1>Инструменты прайса</h1>
     <p>
-      <b>Прайс</b> — считает цену по наценке (/коэффициент) и округляет; для закупа &lt; 40 000 применяет ступени добавок и округление.<br>
-      <b>Безналичная оплата</b> — на вход цена за нал, считаем (цена − взнос) + процент (по умолчанию 25%) и округляем. Срок не выбран по умолчанию.<br>
-      <b>Excel прайсы</b> — вставляете готовые цены → выбираете шаблон → скачиваете Excel, отсутствующие модели = “По запросу”. Есть кнопка “Все прайсы”.
+      <b>Прайс</b> — считает цену по наценке и округляет.<br>
+      <b>Безналичная оплата</b> — на вход цена за нал, считаем (цена − взнос) + % и округляем.<br>
+      <b>Excel прайсы</b> — теперь корректно понимает шаблоны вида “заголовок модели → цвета”.
     </p>
 
     <div class="tabbar" role="tablist" aria-label="Разделы">
@@ -213,14 +106,12 @@
     </div>
   </header>
 
-  <!-- ===== TAB 1: PRICE ===== -->
+  <!-- TAB 1 -->
   <div id="priceTab" class="tab-panel active">
     <main>
       <section class="card">
         <h2>Прайс — вход</h2>
-        <p class="muted small">
-          В каждой строке ищем <b>последнее числовое значение</b> — считаем его ценой.
-        </p>
+        <p class="muted small">В каждой строке ищем последнее число — это цена.</p>
 
         <div class="hint small">
           Наценка (для закупа <b>≥ 40 000</b>):
@@ -256,16 +147,12 @@
 
         <div class="spacer"></div>
         <div class="hint small">
-          Для закупа <b>&lt; 40 000</b> прибавляем и затем округляем:
-          &lt;4 000 → +1 500; &lt;10 000 → +2 000; &lt;15 000 → +2 500; &lt;20 000 → +3 000; &lt;40 000 → +4 000.<br>
-          Округление по остатку внутри тысячи:
-          ≤250 → 990 предыдущей; &gt;250 и &lt;750 → 490 текущей; ≥750 → 990 текущей.
+          Для закупа <b>&lt; 40 000</b>: &lt;4 000 → +1 500; &lt;10 000 → +2 000; &lt;15 000 → +2 500; &lt;20 000 → +3 000; &lt;40 000 → +4 000.
         </div>
       </section>
 
       <section class="card">
         <h2>Прайс — выход</h2>
-        <p class="muted small">Разделитель тысяч точкой + символ ₽. Остальной текст строки сохраняется.</p>
         <textarea id="outputArea" placeholder="Здесь появится результат..." readonly></textarea>
         <div class="spacer"></div>
         <div class="row">
@@ -276,15 +163,12 @@
     </main>
   </div>
 
-  <!-- ===== TAB 2: CASHLESS ===== -->
+  <!-- TAB 2 -->
   <div id="cashlessTab" class="tab-panel">
     <main>
       <section class="card">
         <h2>Безналичная оплата — вход</h2>
-        <p class="muted small">
-          На входе — <b>цена за наличные</b>. Безнал = round((цена − взнос) × (1 + %/100)).
-          <b>Срок не выбран по умолчанию</b>: если срок не выбрать, в выводе будет только сумма безнала.
-        </p>
+        <p class="muted small">Срок не выбран по умолчанию.</p>
 
         <div class="hint small">
           <div class="row" style="justify-content:space-between">
@@ -321,18 +205,10 @@
           <button id="cashlessExampleBtn" class="ghost" type="button">Пример</button>
           <span class="pill" title="Ctrl/⌘ + Enter">Ctrl/⌘+Enter</span>
         </div>
-
-        <div class="spacer"></div>
-        <div class="hint small">
-          Ежемесячный платёж считается только если выбран срок: ⌈сумма/месяцев⌉.
-        </div>
       </section>
 
       <section class="card">
         <h2>Безналичная оплата — выход</h2>
-        <p class="muted small">
-          В строке цена заменяется на <b>сумму безнала</b>. Если выбран срок — добавляется “| 12м: 9.999₽/мес”.
-        </p>
         <textarea id="cashlessOutput" placeholder="Здесь появится результат..." readonly></textarea>
         <div class="spacer"></div>
         <div class="row">
@@ -343,18 +219,15 @@
     </main>
   </div>
 
-  <!-- ===== TAB 3: EXCEL ===== -->
+  <!-- TAB 3 -->
   <div id="excelTab" class="tab-panel">
     <main>
       <section class="card">
         <h2>Excel прайсы — вход</h2>
-        <p class="muted small">
-          Вставьте цены формата “модель … цена₽”. Нажмите кнопку нужного шаблона — Excel скачается.
-          Если модель из шаблона не найдена во входе — в цене будет <b>“По запросу”</b>.
-        </p>
+        <p class="muted small">Теперь корректно заполняет шаблоны, где строка модели — это заголовок, а ниже идут только цвета.</p>
 
         <div class="hint small">
-          Шаблоны должны лежать рядом с <span class="mono">index.html</span>:
+          Шаблоны рядом с <span class="mono">index.html</span>:
           <span class="mono">13 айфоны.xlsx</span>, <span class="mono">14 айфоны.xlsx</span>, <span class="mono">15 айфоны.xlsx</span>,
           <span class="mono">16 айфоны.xlsx</span>, <span class="mono">17 айфоны сим.xlsx</span>, <span class="mono">17 айфоны есим.xlsx</span>.
         </div>
@@ -382,25 +255,13 @@
 
         <div class="spacer"></div>
         <div class="hint small">
-          Подсказка по 17-ым: для “17 SIM” приоритетно берётся строка без eSIM, для “17 eSIM” — строка с eSIM/🇯🇵/🇺🇸.
-          Если конкретного варианта нет — берётся любой совпадающий.
-        </div>
-
-        <div class="spacer"></div>
-        <div class="hint small">
           Если браузер спросит разрешение на множественные загрузки — разрешите, чтобы “Все прайсы” скачал 6 файлов подряд.
         </div>
       </section>
 
       <section class="card">
         <h2>Excel прайсы — заметки</h2>
-        <p class="muted small">
-          Генерация работает полностью в браузере. Если видите “не найден шаблон” — проверьте, что файлы реально загружены рядом с HTML и имена совпадают.
-        </p>
-        <div class="hint small">
-          Если захотите хранить шаблоны в подпапке (например <span class="mono">/templates</span>), поменяйте в коде константу
-          <span class="mono">TEMPLATE_BASE</span>.
-        </div>
+        <p class="muted small">Если видите “не найден шаблон” — проверьте имена файлов и что они лежат рядом с HTML.</p>
       </section>
     </main>
   </div>
@@ -409,7 +270,6 @@
 (() => {
   const $ = (id) => document.getElementById(id);
 
-  /* ===== helpers ===== */
   function formatRub(n){
     const s = String(Math.trunc(n));
     return s.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -464,7 +324,7 @@
   }
   function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
 
-  /* ===== Tabs ===== */
+  /* Tabs */
   const tabPriceBtn = $("tabPriceBtn");
   const tabCashlessBtn = $("tabCashlessBtn");
   const tabExcelBtn = $("tabExcelBtn");
@@ -473,25 +333,18 @@
   const excelTab = $("excelTab");
 
   function setTab(which){
-    const isPrice = which === "price";
-    const isCashless = which === "cashless";
-    const isExcel = which === "excel";
-
-    tabPriceBtn.classList.toggle("active", isPrice);
-    tabCashlessBtn.classList.toggle("active", isCashless);
-    tabExcelBtn.classList.toggle("active", isExcel);
-
-    priceTab.classList.toggle("active", isPrice);
-    cashlessTab.classList.toggle("active", isCashless);
-    excelTab.classList.toggle("active", isExcel);
+    tabPriceBtn.classList.toggle("active", which === "price");
+    tabCashlessBtn.classList.toggle("active", which === "cashless");
+    tabExcelBtn.classList.toggle("active", which === "excel");
+    priceTab.classList.toggle("active", which === "price");
+    cashlessTab.classList.toggle("active", which === "cashless");
+    excelTab.classList.toggle("active", which === "excel");
   }
   tabPriceBtn.addEventListener("click", () => setTab("price"));
   tabCashlessBtn.addEventListener("click", () => setTab("cashless"));
   tabExcelBtn.addEventListener("click", () => setTab("excel"));
 
-  /* =========================
-     TAB 1: PRICE
-  ========================== */
+  /* TAB 1: PRICE */
   const inputArea = $("inputArea");
   const outputArea = $("outputArea");
   const convertBtn = $("convertBtn");
@@ -499,14 +352,11 @@
   const exampleBtn = $("exampleBtn");
   const copyBtn = $("copyBtn");
   const statusPill = $("statusPill");
-
   const statLines = $("statLines");
   const statFound = $("statFound");
   const statNoPrice = $("statNoPrice");
-
   const markupBtns = Array.from(document.querySelectorAll('#priceTab .markup-btn[data-factor]'));
   const markupPill = $("markupPill");
-
   let selectedFactor = 0.88;
 
   function cashAdd(p){
@@ -517,7 +367,6 @@
     if(p < 40000) return 4000;
     return 0;
   }
-
   function convertLinePrice(line){
     const token = findLastNumberToken(line);
     if(!token) return { line, ok:false };
@@ -532,13 +381,11 @@
     const formatted = formatRub(rounded) + "₽";
     return { line: replaceToken(line, token, formatted), ok:true };
   }
-
   function updateStats(linesCount, foundCount){
     statLines.textContent = String(linesCount);
     statFound.textContent = String(foundCount);
     statNoPrice.textContent = String(Math.max(0, linesCount - foundCount));
   }
-
   function doConvertPrice(){
     const lines = (inputArea.value ?? "").split(/\r?\n/);
     let found = 0;
@@ -550,7 +397,6 @@
     }).join("\n");
 
     outputArea.value = out;
-
     const nonEmpty = lines.filter(l => l.trim() !== "").length;
     updateStats(nonEmpty, found);
 
@@ -562,7 +408,6 @@
       copyBtn.disabled = true;
     }
   }
-
   function setActiveMarkupButton(btn){
     markupBtns.forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
@@ -570,11 +415,9 @@
     markupPill.textContent = `Выбрано: ${btn.textContent.trim()} (/${selectedFactor.toFixed(2)})`;
     if((inputArea.value || "").trim() && (outputArea.value || "").trim()) doConvertPrice();
   }
-
   markupBtns.forEach(btn => btn.addEventListener("click", () => setActiveMarkupButton(btn)));
   convertBtn.addEventListener("click", doConvertPrice);
   inputArea.addEventListener("keydown", hotkey(doConvertPrice));
-
   clearBtn.addEventListener("click", () => {
     inputArea.value = "";
     outputArea.value = "";
@@ -582,16 +425,9 @@
     copyBtn.disabled = true;
     setPill(statusPill, false, "Ожидаю ввод");
   });
-
   exampleBtn.addEventListener("click", () => {
-    inputArea.value =
-`AirPods 4 ANC 34900🇯🇵
-Apple Watch SE 40 39.500🇦🇪
-
-16E 256 Black 54400🇮🇳
-17 Air 256 Blue eSim 70800🇺🇸`;
+    inputArea.value = `13 128GB Midnight 🇮🇳 40.490₽\n14 128GB Midnight 🇮🇳 45.490₽`;
   });
-
   copyBtn.addEventListener("click", async () => {
     try{
       await navigator.clipboard.writeText(outputArea.value);
@@ -602,13 +438,10 @@ Apple Watch SE 40 39.500🇦🇪
     }
   });
 
-  /* =========================
-     TAB 2: CASHLESS
-  ========================== */
+  /* TAB 2: CASHLESS */
   const downpayInput = $("downpayInput");
   const cashlessPercent = $("cashlessPercent");
   const cashlessRulePill = $("cashlessRulePill");
-
   const cashlessInput = $("cashlessInput");
   const cashlessOutput = $("cashlessOutput");
   const cashlessCalcBtn = $("cashlessCalcBtn");
@@ -617,7 +450,6 @@ Apple Watch SE 40 39.500🇦🇪
   const cashlessCopyBtn = $("cashlessCopyBtn");
   const cashlessStatusPill = $("cashlessStatusPill");
   const monthsPill = $("monthsPill");
-
   const monthsBtns = Array.from(document.querySelectorAll('#cashlessTab .markup-btn[data-months]'));
   let selectedMonths = null;
 
@@ -628,7 +460,6 @@ Apple Watch SE 40 39.500🇦🇪
   function refreshCashlessPill(){
     cashlessRulePill.textContent = `+${currentPercent()}%`;
   }
-
   function cashlessCalc(cash, downpay, percent){
     const remaining = Math.max(0, cash - downpay);
     const base = remaining * (1 + (percent / 100));
@@ -639,7 +470,6 @@ Apple Watch SE 40 39.500🇦🇪
     if(!months || sum <= 0) return 0;
     return Math.ceil(sum / months);
   }
-
   function convertLineCashless(line, downpay, months, percent){
     const token = findLastNumberToken(line);
     if(!token) return { line, ok:false };
@@ -657,11 +487,9 @@ Apple Watch SE 40 39.500🇦🇪
     }
     return { line: newLine, ok:true };
   }
-
   function doCashless(){
     const dp = parseMoneyDigits(downpayInput.value);
     const pct = currentPercent();
-
     cashlessPercent.value = String(pct);
     refreshCashlessPill();
 
@@ -684,7 +512,6 @@ Apple Watch SE 40 39.500🇦🇪
       cashlessCopyBtn.disabled = true;
     }
   }
-
   function setActiveMonths(btn){
     monthsBtns.forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
@@ -693,39 +520,28 @@ Apple Watch SE 40 39.500🇦🇪
     if((cashlessInput.value || "").trim() && (cashlessOutput.value || "").trim()) doCashless();
   }
   monthsBtns.forEach(btn => btn.addEventListener("click", () => setActiveMonths(btn)));
-
   cashlessCalcBtn.addEventListener("click", doCashless);
   cashlessInput.addEventListener("keydown", hotkey(doCashless));
-
   cashlessClearBtn.addEventListener("click", () => {
     downpayInput.value = "";
     cashlessInput.value = "";
     cashlessOutput.value = "";
     cashlessCopyBtn.disabled = true;
-
     selectedMonths = null;
     monthsBtns.forEach(b => b.classList.remove("active"));
     monthsPill.textContent = "Срок не выбран";
-
     refreshCashlessPill();
     setPill(cashlessStatusPill, false, "Ожидаю ввод");
   });
-
   cashlessExampleBtn.addEventListener("click", () => {
     downpayInput.value = "50 000";
     cashlessPercent.value = "25";
     refreshCashlessPill();
-
     selectedMonths = null;
     monthsBtns.forEach(b => b.classList.remove("active"));
     monthsPill.textContent = "Срок не выбран";
-
-    cashlessInput.value =
-`iPhone 15 Pro Max 100000
-MacBook Air 13 84990
-AirPods 4 19990`;
+    cashlessInput.value = `iPhone 15 Pro Max 100000\nMacBook Air 13 84990`;
   });
-
   cashlessCopyBtn.addEventListener("click", async () => {
     try{
       await navigator.clipboard.writeText(cashlessOutput.value);
@@ -735,30 +551,23 @@ AirPods 4 19990`;
       setPill(cashlessStatusPill, false, "Не удалось скопировать");
     }
   });
-
   cashlessPercent.addEventListener("input", debounce(() => {
     cashlessPercent.value = String(currentPercent());
     refreshCashlessPill();
     if((cashlessInput.value || "").trim() && (cashlessOutput.value || "").trim()) doCashless();
   }, 80));
-
   downpayInput.addEventListener("blur", () => {
     const v = parseMoneyDigits(downpayInput.value);
     downpayInput.value = v ? String(v).replace(/\B(?=(\d{3})+(?!\d))/g, " ") : "";
   });
-
   refreshCashlessPill();
 
-  /* =========================
-     TAB 3: EXCEL generator
-  ========================== */
-  const TEMPLATE_BASE = "./"; // если шаблоны в папке templates → "./templates/"
-
+  /* TAB 3: EXCEL */
+  const TEMPLATE_BASE = "./";
   const excelInput = $("excelInput");
   const excelStatus = $("excelStatus");
   const excelStats = $("excelStats");
   const excelExampleBtn = $("excelExampleBtn");
-
   const btnAll = $("btnAll");
   const btn13 = $("btn13");
   const btn14 = $("btn14");
@@ -766,7 +575,6 @@ AirPods 4 19990`;
   const btn16 = $("btn16");
   const btn17sim = $("btn17sim");
   const btn17esim = $("btn17esim");
-
   const excelButtons = [btnAll, btn13, btn14, btn15, btn16, btn17sim, btn17esim, excelExampleBtn];
 
   const templates = {
@@ -784,7 +592,6 @@ AirPods 4 19990`;
     if(!res.ok) throw new Error(`Не найден шаблон: ${filename} (HTTP ${res.status})`);
     return await res.arrayBuffer();
   }
-
   function downloadArrayBufferAsFile(ab, filename){
     const blob = new Blob([ab], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     const url = URL.createObjectURL(blob);
@@ -793,10 +600,7 @@ AirPods 4 19990`;
     a.download = filename;
     document.body.appendChild(a);
     a.click();
-    setTimeout(() => {
-      URL.revokeObjectURL(url);
-      a.remove();
-    }, 1500);
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1500);
   }
 
   function stripEmojiAndFlags(s){
@@ -806,6 +610,12 @@ AirPods 4 19990`;
     return t;
   }
   function normalizeSpaces(s){ return String(s || "").replace(/\s+/g, " ").trim(); }
+  function normalizeColor(s){
+    let t = String(s||"").toLowerCase();
+    t = stripEmojiAndFlags(t);
+    t = t.replace(/[^a-z0-9а-яё]+/gi, " ");
+    return normalizeSpaces(t);
+  }
 
   function canonKeyFromText(text){
     let raw = String(text || "");
@@ -815,6 +625,7 @@ AirPods 4 19990`;
     let t = rawLower;
     t = t.replace(/apple/g, " ");
     t = t.replace(/iphone/g, " ");
+    t = t.replace(/айфон|айфоны/g, " ");
     t = stripEmojiAndFlags(t);
     t = t.replace(/[()\-–—,:;•▪️]/g, " ");
     t = t.replace(/\+/g, " plus ");
@@ -826,10 +637,12 @@ AirPods 4 19990`;
     t = normalizeSpaces(t);
 
     const tokens = t.split(" ").filter(Boolean);
-    const seriesIdx = tokens.findIndex(x => /^(1[3-7])$/.test(x) || /^(1[3-7])[a-z]$/.test(x));
+
+    const seriesIdx = tokens.findIndex(x => /^(?:[1-2]\d)[a-z]?$/.test(x));
     if(seriesIdx === -1) return { key: t, esim };
 
     const series = tokens[seriesIdx].replace(/[^0-9]/g, "");
+
     let variant = "";
     const hasAir = tokens.includes("air");
     const hasPlus = tokens.includes("plus");
@@ -847,7 +660,7 @@ AirPods 4 19990`;
       if(/^1tb$/.test(tk) || /^2tb$/.test(tk)){ storage = tk; break; }
     }
 
-    const drop = new Set(["apple","iphone","esim", series, "pro", "max", "plus", "air"]);
+    const drop = new Set(["apple","iphone","айфон","айфоны","esim", series, "pro", "max", "plus", "air"]);
     let rest = tokens.filter(x => !drop.has(x));
     if(storage) rest = rest.filter(x => x !== storage);
     rest = rest.filter(x => x !== "gb" && x !== "tb");
@@ -893,39 +706,6 @@ AirPods 4 19990`;
     return entry.last ?? null;
   }
 
-  function detectHeaderAndCols(ws){
-    const ref = ws["!ref"];
-    if(!ref) return null;
-    const range = XLSX.utils.decode_range(ref);
-    const maxScan = Math.min(range.e.r, range.s.r + 40);
-
-    const headerKeywordsPrice = /(цена|price)/i;
-    const headerKeywordsModel = /(модель|наимен|назван|товар|model|item|product)/i;
-
-    for(let r = range.s.r; r <= maxScan; r++){
-      let rowVals = [];
-      for(let c = range.s.c; c <= range.e.c; c++){
-        const addr = XLSX.utils.encode_cell({r,c});
-        const cell = ws[addr];
-        rowVals.push(cell ? String(cell.v ?? "").trim() : "");
-      }
-      const joined = rowVals.join(" | ").toLowerCase();
-      if(joined.includes("цена") || joined.includes("price")){
-        let priceCol = null;
-        let modelCol = null;
-        for(let c = range.s.c; c <= range.e.c; c++){
-          const h = rowVals[c - range.s.c].toLowerCase();
-          if(priceCol === null && headerKeywordsPrice.test(h)) priceCol = c;
-          if(modelCol === null && headerKeywordsModel.test(h)) modelCol = c;
-        }
-        if(priceCol === null) priceCol = range.e.c;
-        if(modelCol === null) modelCol = range.s.c;
-        return { range, headerRow: r, modelCol, priceCol };
-      }
-    }
-    return { range, headerRow: range.s.r, modelCol: range.s.c, priceCol: range.e.c };
-  }
-
   function getCell(ws, r, c){
     const addr = XLSX.utils.encode_cell({r,c});
     return ws[addr];
@@ -941,6 +721,90 @@ AirPods 4 19990`;
     else { cell.t = "s"; cell.v = String(v); }
   }
 
+  function detectHeaderAndCols(ws){
+    const ref = ws["!ref"];
+    if(!ref) return null;
+    const range = XLSX.utils.decode_range(ref);
+    const maxScan = Math.min(range.e.r, range.s.r + 50);
+
+    for(let r = range.s.r; r <= maxScan; r++){
+      let rowVals = [];
+      for(let c = range.s.c; c <= range.e.c; c++){
+        const addr = XLSX.utils.encode_cell({r,c});
+        const cell = ws[addr];
+        rowVals.push(cell ? String(cell.v ?? "").trim() : "");
+      }
+      const joined = rowVals.join(" | ").toLowerCase();
+      if(joined.includes("цена") || joined.includes("price")){
+        let priceCol = null;
+        let modelCol = null;
+        for(let c = range.s.c; c <= range.e.c; c++){
+          const h = (rowVals[c - range.s.c] || "").toLowerCase();
+          if(priceCol === null && /(цена|price)/i.test(h)) priceCol = c;
+          if(modelCol === null && /(модель|наимен|назван|товар|model|item|product)/i.test(h)) modelCol = c;
+        }
+        if(priceCol === null) priceCol = range.e.c;
+        if(modelCol === null) modelCol = range.s.c;
+        return { range, hasHeader:true, headerRow:r, modelCol, priceCol };
+      }
+    }
+    return { range, hasHeader:false, headerRow:null, modelCol:null, priceCol:null };
+  }
+
+  function detectModelPriceColsHeuristic(ws, range){
+    const stats = [];
+    const maxRows = Math.min(range.e.r, range.s.r + 500);
+
+    for(let c = range.s.c; c <= range.e.c; c++){
+      let nonEmpty = 0, priceScore = 0, modelScore = 0;
+      for(let r = range.s.r; r <= maxRows; r++){
+        const v = getCellValue(ws, r, c);
+        if(v === null || v === undefined) continue;
+        const s = String(v).trim();
+        if(!s) continue;
+        nonEmpty++;
+
+        const sl = s.toLowerCase();
+        if(typeof v === "number") priceScore += 4;
+        if(sl.includes("по запросу")) priceScore += 6;
+        if(/[0-9]/.test(sl) && (sl.includes("₽") || sl.includes("руб") || sl.includes("р."))) priceScore += 3;
+        if(/\d{1,3}(\.\d{3})+/.test(sl)) priceScore += 2;
+
+        if(sl.includes("iphone") || sl.includes("айфон") || sl.includes("ipad") || sl.includes("macbook") || sl.includes("watch")) modelScore += 4;
+        if(/\b(\d+)\s*(gb|tb)\b/i.test(sl) || /\b(\d+)(gb|tb)\b/i.test(sl)) modelScore += 3;
+        if(/[a-zа-яё]/i.test(sl) && !/[0-9]/.test(sl)) modelScore += 1;
+      }
+      if(nonEmpty > 0) stats.push({c, nonEmpty, priceScore, modelScore});
+    }
+    if(stats.length === 0) return { modelCol: range.s.c, priceCol: range.e.c };
+
+    stats.sort((a,b) => (b.priceScore - a.priceScore) || (b.nonEmpty - a.nonEmpty));
+    const priceCol = stats[0].c;
+
+    const rest = stats.filter(x => x.c !== priceCol);
+    rest.sort((a,b) => (b.modelScore - a.modelScore) || (b.nonEmpty - a.nonEmpty) || (a.c - b.c));
+    const modelCol = rest.length ? rest[0].c : priceCol === range.s.c ? range.s.c + 1 : range.s.c;
+
+    return { modelCol, priceCol };
+  }
+
+  function isSectionHeader(modelStr){
+    const t = String(modelStr || "").toLowerCase();
+    const hasStorage = /\b(\d+)\s*(gb|tb)\b/i.test(t) || /\b(\d+)(gb|tb)\b/i.test(t);
+    const hasSeries = /\b([1-2]\d)\b/.test(t) || /\b([1-2]\d)[a-z]\b/.test(t);
+    const hasDevice = /iphone|айфон|ipad|macbook|watch/.test(t) || /plus|pro|max|air/.test(t);
+    const hasCurrency = t.includes("₽") || t.includes("руб") || t.includes("р.");
+    return hasStorage && hasSeries && (hasDevice || t.includes("iphone")) && !hasCurrency;
+  }
+
+  function looksLikeColorOnly(modelStr){
+    const t = String(modelStr||"").toLowerCase();
+    const hasSeries = /\b([1-2]\d)\b/.test(t) || /\b([1-2]\d)[a-z]\b/.test(t);
+    const hasStorage = /\b(\d+)\s*(gb|tb)\b/i.test(t) || /\b(\d+)(gb|tb)\b/i.test(t);
+    const hasDevice = /iphone|айфон|ipad|macbook|watch/.test(t);
+    return !hasSeries && !hasStorage && !hasDevice;
+  }
+
   async function buildAndFillWorkbook(template, priceMap){
     const buf = await fetchTemplateArrayBuffer(template.file);
     const wb = XLSX.read(buf, { type: "array", cellStyles: true });
@@ -953,18 +817,52 @@ AirPods 4 19990`;
       const meta = detectHeaderAndCols(ws);
       if(!meta) continue;
 
-      const { range, headerRow, modelCol, priceCol } = meta;
+      let { range, hasHeader, headerRow, modelCol, priceCol } = meta;
+      if(!hasHeader){
+        const cols = detectModelPriceColsHeuristic(ws, range);
+        modelCol = cols.modelCol;
+        priceCol = cols.priceCol;
+      }
 
-      for(let r = headerRow + 1; r <= range.e.r; r++){
-        const modelVal = getCellValue(ws, r, modelCol);
-        const modelStr = normalizeSpaces(String(modelVal || ""));
-        if(!modelStr) continue;
-        if(/итого|total/i.test(modelStr)) continue;
+      let currentBaseKey = "";
 
-        const { key } = canonKeyFromText(modelStr);
-        if(!key) continue;
+      const startRow = hasHeader ? (headerRow + 1) : range.s.r;
+      for(let r = startRow; r <= range.e.r; r++){
+        const rawModel = getCellValue(ws, r, modelCol);
+        if(rawModel === null || rawModel === undefined) continue;
 
-        const price = getPriceFromMap(priceMap, key, template.wantEsim);
+        const modelStr = normalizeSpaces(String(rawModel || ""));
+        const modelClean = normalizeColor(modelStr);
+        if(!modelClean) continue;
+
+        const ml = modelStr.toLowerCase();
+        if(/^(модель|model|наименование|товар|item|product)$/i.test(modelClean)) continue;
+
+        if(isSectionHeader(modelStr)){
+          currentBaseKey = canonKeyFromText(modelStr).key; // типа "13 512gb" или "14 plus 256gb"
+          continue;
+        }
+
+        let key;
+        if(looksLikeColorOnly(modelStr) && currentBaseKey){
+          key = normalizeSpaces(currentBaseKey + " " + modelClean);
+        } else {
+          key = canonKeyFromText(modelStr).key;
+          // если вдруг строка с цветом, но серия/память не распознаны — пробуем в контексте
+          if(!key && currentBaseKey){
+            key = normalizeSpaces(currentBaseKey + " " + modelClean);
+          }
+        }
+
+        // пробуем найти цену
+        let price = getPriceFromMap(priceMap, key, template.wantEsim);
+
+        // fallback: иногда цвет строкой, но canonKeyFromText вернул "red" — попробуем через контекст
+        if(!price && currentBaseKey && looksLikeColorOnly(modelStr)){
+          const k2 = normalizeSpaces(currentBaseKey + " " + modelClean);
+          price = getPriceFromMap(priceMap, k2, template.wantEsim);
+        }
+
         if(price){
           setCellValue(ws, r, priceCol, price);
           changed++;
@@ -1025,7 +923,6 @@ AirPods 4 19990`;
   }
 
   let allBusy = false;
-
   async function generateAllExcels(){
     if(allBusy) return;
     if(!window.XLSX){
@@ -1053,12 +950,9 @@ AirPods 4 19990`;
 
     const now = new Date();
     const stamp = makeStamp(now);
-
     const list = [templates.t13, templates.t14, templates.t15, templates.t16, templates.t17sim, templates.t17esim];
 
-    let totalChanged = 0;
-    let totalMissing = 0;
-    let okCount = 0;
+    let totalChanged = 0, totalMissing = 0, okCount = 0;
 
     for(let i = 0; i < list.length; i++){
       const t = list[i];
@@ -1072,21 +966,14 @@ AirPods 4 19990`;
         okCount++;
         totalChanged += filled.changed;
         totalMissing += filled.missing;
-
-        // небольшая пауза — помогает браузеру корректно обработать очередные скачивания
         await sleep(180);
       }catch(err){
-        // продолжаем дальше, но показываем что один из файлов упал
         setPill(excelStatus, false, `Ошибка: ${t.label} — ${String(err.message || err)}`);
         await sleep(450);
       }
     }
 
-    if(okCount === 6){
-      setPill(excelStatus, true, "Скачано: 6 файлов");
-    } else {
-      setPill(excelStatus, false, `Скачано: ${okCount}/6 (часть с ошибками)`);
-    }
+    setPill(excelStatus, okCount === 6, okCount === 6 ? "Скачано: 6 файлов" : `Скачано: ${okCount}/6 (есть ошибки)`);
     excelStats.textContent = `Входных цен: ${parsedLines} · Заполнено: ${totalChanged} · По запросу: ${totalMissing}`;
 
     excelButtons.forEach(b => b && (b.disabled = false));
@@ -1104,10 +991,10 @@ AirPods 4 19990`;
   excelExampleBtn.addEventListener("click", () => {
     excelInput.value =
 `13 128GB Midnight 🇮🇳 40.490₽
+13 512GB Red 🇮🇳 49.490₽
 14 128GB Midnight 🇮🇳 45.490₽
-15 128GB Black 🇮🇳 48.990₽
-16 128GB Black 🇮🇳 58.490₽
-17 256GB Black 🇯🇵 71.490₽`;
+17 256GB Black 🇯🇵 71.490₽
+17 256GB Black 🇮🇳 73.490₽`;
     setPill(excelStatus, false, "Ожидаю ввод");
     excelStats.textContent = "—";
   });
