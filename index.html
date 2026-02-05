@@ -3,7 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Калькулятор прайса + Рассрочка</title>
+  <title>Прайс / Безнал / Excel</title>
+
+  <!-- SheetJS (XLSX) для генерации Excel в браузере -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <style>
     :root{
       --bg:#0b0c10;
@@ -30,18 +34,38 @@
     }
     header{
       padding: 28px 20px 10px;
-      max-width: 1100px;
+      max-width: 1150px;
       margin: 0 auto;
-      display:flex;
-      gap:14px;
-      flex-wrap:wrap;
-      align-items:flex-end;
-      justify-content:space-between;
     }
-    h1{font-size: clamp(20px, 2.8vw, 30px); margin: 0 0 6px;}
-    header p{margin:0; color:var(--muted); line-height:1.45; font-size: 13px; max-width: 820px;}
+    h1{
+      font-size: clamp(22px, 3vw, 34px);
+      margin: 0 0 8px;
+    }
+    header p{
+      margin:0 0 10px;
+      color:var(--muted);
+      line-height:1.5;
+      max-width: 980px;
+      font-size: 13px;
+    }
+
+    .tabbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
+    .tab-btn{
+      background: transparent;
+      border:1px solid var(--border);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 999px;
+      font-weight: 750;
+      cursor:pointer
+    }
+    .tab-btn.active{
+      background: rgba(124,155,255,0.18);
+      border-color: rgba(124,155,255,0.45);
+    }
+
     main{
-      max-width:1100px;
+      max-width:1150px;
       margin: 0 auto;
       padding: 10px 20px 50px;
       display:grid;
@@ -51,6 +75,9 @@
     @media (min-width: 980px){
       main{ grid-template-columns: 1fr 1fr; align-items:start; }
     }
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
+
     .card{
       background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent 30%), var(--panel);
       border:1px solid var(--border);
@@ -63,6 +90,7 @@
     .small{font-size: 12.5px}
     .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
     .spacer{height:10px}
+
     textarea{
       width:100%;
       min-height: 360px;
@@ -76,8 +104,7 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
       font-size: 12.6px;
     }
-    input[type="text"], input[type="tel"]{
-      width: 220px;
+    input[type="text"], input[type="number"]{
       padding: 10px 12px;
       background: var(--panel-2);
       border:1px solid var(--border);
@@ -86,7 +113,9 @@
       outline:none;
       font-size: 13px;
     }
-    input.wide{width: 100%}
+    input.compact{width: 120px}
+    input.mid{width: 220px}
+
     button{
       appearance:none;
       border:1px solid transparent;
@@ -94,7 +123,7 @@
       color:white;
       padding: 10px 14px;
       border-radius: 12px;
-      font-weight: 650;
+      font-weight: 750;
       cursor:pointer;
       transition: transform .05s ease, filter .2s ease, opacity .2s ease;
     }
@@ -103,6 +132,7 @@
     button.secondary{background: transparent; border-color: var(--border); color: var(--text);}
     button.ghost{background: transparent; border-color: transparent; color: var(--muted);}
     button:disabled{ opacity: .55; cursor:not-allowed; }
+
     .pill{
       display:inline-flex;
       align-items:center;
@@ -117,6 +147,7 @@
     }
     .pill.ok{color: #d9ffe5; background: rgba(125,255,155,0.08); border-color: rgba(125,255,155,0.25)}
     .pill.bad{color: #ffe1e1; background: rgba(255,107,107,0.08); border-color: rgba(255,107,107,0.25)}
+
     .hint{
       padding: 10px 12px;
       background: rgba(124,155,255,0.08);
@@ -124,6 +155,30 @@
       border-radius: 12px;
       color: #e8ecff;
     }
+
+    .markup-bar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:10px;
+      align-items:center;
+    }
+    .markup-btn{
+      background: transparent;
+      border:1px solid var(--border);
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 12px;
+      line-height: 1;
+      cursor:pointer;
+    }
+    .markup-btn.active{
+      background: rgba(124,155,255,0.18);
+      border-color: rgba(124,155,255,0.45);
+    }
+
     .stats{
       display:grid;
       grid-template-columns: repeat(3, minmax(0,1fr));
@@ -137,81 +192,35 @@
       padding: 10px 12px;
     }
     .stat .label{font-size: 11.5px; color: var(--muted)}
-    .stat .value{font-size: 18px; font-weight: 750; margin-top: 2px}
+    .stat .value{font-size: 18px; font-weight: 850; margin-top: 2px}
     .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;}
-
-    .markup-bar{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; align-items:center;}
-    .markup-btn{
-      background: transparent;
-      border:1px solid var(--border);
-      color: var(--text);
-      padding: 8px 10px;
-      border-radius: 999px;
-      font-weight: 720;
-      font-size: 12px;
-      line-height:1;
-    }
-    .markup-btn.active{
-      background: rgba(124,155,255,0.18);
-      border-color: rgba(124,155,255,0.45);
-    }
-
-    /* tabs */
-    .tabbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
-    .tab-btn{background: transparent;border:1px solid var(--border);color: var(--text);padding: 10px 12px;border-radius: 999px;font-weight: 720;cursor:pointer}
-    .tab-btn.active{background: rgba(124,155,255,0.18); border-color: rgba(124,155,255,0.45);}
-    .tab-panel{display:none}
-    .tab-panel.active{display:block}
-
-    /* installment quick grid */
-    .grid2{display:grid; grid-template-columns: 1fr; gap:10px}
-    @media (min-width: 980px){ .grid2{grid-template-columns: 1fr 1fr;} }
-    .mini{
-      background: var(--panel-2);
-      border:1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px 12px;
-    }
-    .mini .k{font-size: 11.5px;color: var(--muted)}
-    .mini .v{font-size: 16px;font-weight: 750;margin-top:2px}
-    .paygrid{
-      display:grid;
-      grid-template-columns: repeat(4, minmax(0,1fr));
-      gap:8px;
-      margin-top:10px;
-    }
-    .paychip{
-      background: rgba(255,255,255,0.04);
-      border:1px solid var(--border);
-      border-radius: 12px;
-      padding: 8px 10px;
-      min-height: 58px;
-    }
-    .paychip .m{font-size: 11.5px;color: var(--muted)}
-    .paychip .p{font-size: 14px;font-weight: 800;margin-top:2px}
   </style>
 </head>
+
 <body>
   <header>
-    <div>
-      <h1>Калькулятор прайса</h1>
-      <p>
-        Вкладка «Прайс»: берём последнее число в строке как закуп. Для закупа ≥ 40 000 — деление на коэффициент (кнопки наценки),
-        для закупа &lt; 40 000 — фиксированная добавка по ступеням. Вкладка «Рассрочка»: на вход цена за наличные → /0.70 (+30%) и округление, плюс ежемесячный платёж.
-      </p>
+    <h1>Инструменты прайса</h1>
+    <p>
+      <b>Прайс</b> — считает цену по наценке (/коэффициент) и округляет; для закупа &lt; 40 000 применяет ступени добавок и округление.<br>
+      <b>Безналичная оплата</b> — на вход цена за нал, считаем (цена − взнос) + процент (по умолчанию 25%) и округляем. Срок не выбран по умолчанию.<br>
+      <b>Excel прайсы</b> — вставляете готовые цены → выбираете шаблон → скачиваете Excel, отсутствующие модели = “По запросу”. Есть кнопка “Все прайсы”.
+    </p>
 
-      <div class="tabbar" role="tablist" aria-label="Разделы">
-        <button class="tab-btn active" id="tabPriceBtn" type="button">Прайс</button>
-        <button class="tab-btn" id="tabInstallmentBtn" type="button">Рассрочка</button>
-      </div>
+    <div class="tabbar" role="tablist" aria-label="Разделы">
+      <button class="tab-btn active" id="tabPriceBtn" type="button">Прайс</button>
+      <button class="tab-btn" id="tabCashlessBtn" type="button">Безналичная оплата</button>
+      <button class="tab-btn" id="tabExcelBtn" type="button">Excel прайсы</button>
     </div>
   </header>
 
+  <!-- ===== TAB 1: PRICE ===== -->
   <div id="priceTab" class="tab-panel active">
     <main>
       <section class="card">
         <h2>Прайс — вход</h2>
-        <p class="muted small">Ищем <b>последнее числовое значение</b> в строке и заменяем его на рассчитанную цену.</p>
+        <p class="muted small">
+          В каждой строке ищем <b>последнее числовое значение</b> — считаем его ценой.
+        </p>
 
         <div class="hint small">
           Наценка (для закупа <b>≥ 40 000</b>):
@@ -236,7 +245,7 @@
           <button id="convertBtn" type="button">Посчитать</button>
           <button id="clearBtn" class="secondary" type="button">Очистить</button>
           <button id="exampleBtn" class="ghost" type="button">Пример</button>
-          <span class="pill" title="Ctrl/⌘ + Enter">Горячая клавиша: Ctrl/⌘+Enter</span>
+          <span class="pill" title="Ctrl/⌘ + Enter">Ctrl/⌘+Enter</span>
         </div>
 
         <div class="stats">
@@ -248,10 +257,9 @@
         <div class="spacer"></div>
         <div class="hint small">
           Для закупа <b>&lt; 40 000</b> прибавляем и затем округляем:
-          &lt;4 000 → +1 500; &lt;10 000 → +2 000; &lt;15 000 → +2 500; &lt;20 000 → +3 000; &lt;40 000 → +4 000.
-          <div class="spacer"></div>
+          &lt;4 000 → +1 500; &lt;10 000 → +2 000; &lt;15 000 → +2 500; &lt;20 000 → +3 000; &lt;40 000 → +4 000.<br>
           Округление по остатку внутри тысячи:
-          ≤250 → 990 предыдущей тысячи; &gt;250 и &lt;750 → 490 текущей; ≥750 → 990 текущей.
+          ≤250 → 990 предыдущей; &gt;250 и &lt;750 → 490 текущей; ≥750 → 990 текущей.
         </div>
       </section>
 
@@ -268,109 +276,130 @@
     </main>
   </div>
 
-  <div id="installmentTab" class="tab-panel">
+  <!-- ===== TAB 2: CASHLESS ===== -->
+  <div id="cashlessTab" class="tab-panel">
     <main>
       <section class="card">
-        <h2>Рассрочка — быстрый расчёт</h2>
+        <h2>Безналичная оплата — вход</h2>
         <p class="muted small">
-          На вход — <b>цена за наличные</b>. Рассрочка = <span class="mono">остаток / 0.70</span> (+30%) и округление по тем же правилам.
-          Первоначальный взнос уменьшает «остаток».
-        </p>
-
-        <div class="hint small">
-          <div class="grid2">
-            <div class="row" style="align-items:flex-start; gap:10px">
-              <div style="flex:1; min-width:240px">
-                <div class="muted small" style="margin-bottom:6px">Цена за наличные, ₽</div>
-                <input id="quickCash" class="wide" type="text" placeholder="например 100 000" inputmode="numeric" />
-              </div>
-              <div style="flex:1; min-width:240px">
-                <div class="muted small" style="margin-bottom:6px">Первоначальный взнос, ₽</div>
-                <input id="quickDownpay" class="wide" type="text" placeholder="например 50 000" inputmode="numeric" />
-              </div>
-            </div>
-
-            <div class="row" style="justify-content:space-between; align-items:flex-end">
-              <div>
-                <div class="muted small">Срок:</div>
-                <div class="markup-bar" style="margin-top:6px" role="group" aria-label="Срок рассрочки">
-                  <button class="markup-btn active" data-months="6" type="button">6 мес</button>
-                  <button class="markup-btn" data-months="12" type="button">12 мес</button>
-                  <button class="markup-btn" data-months="24" type="button">24 мес</button>
-                  <button class="markup-btn" data-months="36" type="button">36 мес</button>
-                </div>
-              </div>
-              <span class="pill ok" id="monthsPill2">Выбрано: 6 мес</span>
-              <span class="pill" id="instRulePill2">Коэффициент: /0.70</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="spacer"></div>
-
-        <div class="grid2">
-          <div class="mini"><div class="k">Остаток (цена − взнос)</div><div class="v" id="qRemaining">—</div></div>
-          <div class="mini"><div class="k">Сумма рассрочки (округлённая)</div><div class="v" id="qSum">—</div></div>
-          <div class="mini"><div class="k">Ежемесячный платёж (выбранный срок)</div><div class="v" id="qMonthly">—</div></div>
-          <div class="mini"><div class="k">Итого к оплате (взнос + рассрочка)</div><div class="v" id="qTotal">—</div></div>
-        </div>
-
-        <div class="paygrid" aria-label="Платежи по срокам">
-          <div class="paychip"><div class="m">6 мес</div><div class="p" id="pay6">—</div></div>
-          <div class="paychip"><div class="m">12 мес</div><div class="p" id="pay12">—</div></div>
-          <div class="paychip"><div class="m">24 мес</div><div class="p" id="pay24">—</div></div>
-          <div class="paychip"><div class="m">36 мес</div><div class="p" id="pay36">—</div></div>
-        </div>
-
-        <div class="spacer"></div>
-
-        <div class="row">
-          <button id="qCopyBtn" class="secondary" type="button" disabled>Скопировать результат</button>
-          <span class="pill" id="qStatus">Введите цену</span>
-        </div>
-
-        <div class="spacer"></div>
-
-        <div class="hint small">
-          Округление по остатку внутри тысячи: ≤250 → 990 предыдущей; &gt;250 и &lt;750 → 490 текущей; ≥750 → 990 текущей.
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>Рассрочка — список</h2>
-        <p class="muted small">
-          Вставьте список: берём последнее число в строке как цену за наличные, заменяем на сумму рассрочки и добавляем ежемесячный платёж.
+          На входе — <b>цена за наличные</b>. Безнал = round((цена − взнос) × (1 + %/100)).
+          <b>Срок не выбран по умолчанию</b>: если срок не выбрать, в выводе будет только сумма безнала.
         </p>
 
         <div class="hint small">
           <div class="row" style="justify-content:space-between">
             <div class="row">
-              <span class="muted small">Взнос для всех строк, ₽:</span>
-              <input id="downpayInput" type="text" placeholder="например 50 000" inputmode="numeric" />
+              <span class="muted small">Взнос, ₽:</span>
+              <input id="downpayInput" class="mid" type="text" placeholder="например 50 000" inputmode="numeric" />
             </div>
-            <span class="pill" id="monthsPill">Срок: 6 мес</span>
+            <div class="row">
+              <span class="muted small">Наценка безнал, %:</span>
+              <input id="cashlessPercent" class="compact" type="number" min="0" step="1" value="25" />
+            </div>
+            <span class="pill" id="cashlessRulePill">+25%</span>
+          </div>
+
+          <div class="spacer"></div>
+
+          Срок:
+          <div class="markup-bar" role="group" aria-label="Срок оплаты">
+            <button class="markup-btn" data-months="6" type="button">6 мес</button>
+            <button class="markup-btn" data-months="12" type="button">12 мес</button>
+            <button class="markup-btn" data-months="24" type="button">24 мес</button>
+            <button class="markup-btn" data-months="36" type="button">36 мес</button>
+            <span class="pill" id="monthsPill">Срок не выбран</span>
           </div>
         </div>
 
         <div class="spacer"></div>
-
-        <textarea id="instInputArea" placeholder="Вставьте список цен за наличные..."></textarea>
+        <textarea id="cashlessInput" placeholder="Вставьте список цен за наличные..."></textarea>
 
         <div class="spacer"></div>
         <div class="row">
-          <button id="instCalcBtn" type="button">Рассчитать</button>
-          <button id="instClearBtn" class="secondary" type="button">Очистить</button>
-          <button id="instExampleBtn" class="ghost" type="button">Пример</button>
-          <span class="pill" title="Ctrl/⌘ + Enter">Горячая клавиша: Ctrl/⌘+Enter</span>
+          <button id="cashlessCalcBtn" type="button">Рассчитать</button>
+          <button id="cashlessClearBtn" class="secondary" type="button">Очистить</button>
+          <button id="cashlessExampleBtn" class="ghost" type="button">Пример</button>
+          <span class="pill" title="Ctrl/⌘ + Enter">Ctrl/⌘+Enter</span>
         </div>
 
         <div class="spacer"></div>
-        <textarea id="instOutputArea" placeholder="Здесь появится результат..." readonly></textarea>
+        <div class="hint small">
+          Ежемесячный платёж считается только если выбран срок: ⌈сумма/месяцев⌉.
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Безналичная оплата — выход</h2>
+        <p class="muted small">
+          В строке цена заменяется на <b>сумму безнала</b>. Если выбран срок — добавляется “| 12м: 9.999₽/мес”.
+        </p>
+        <textarea id="cashlessOutput" placeholder="Здесь появится результат..." readonly></textarea>
+        <div class="spacer"></div>
+        <div class="row">
+          <button id="cashlessCopyBtn" class="secondary" type="button" disabled>Скопировать</button>
+          <span id="cashlessStatusPill" class="pill bad">Ожидаю ввод</span>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ===== TAB 3: EXCEL ===== -->
+  <div id="excelTab" class="tab-panel">
+    <main>
+      <section class="card">
+        <h2>Excel прайсы — вход</h2>
+        <p class="muted small">
+          Вставьте цены формата “модель … цена₽”. Нажмите кнопку нужного шаблона — Excel скачается.
+          Если модель из шаблона не найдена во входе — в цене будет <b>“По запросу”</b>.
+        </p>
+
+        <div class="hint small">
+          Шаблоны должны лежать рядом с <span class="mono">index.html</span>:
+          <span class="mono">13 айфоны.xlsx</span>, <span class="mono">14 айфоны.xlsx</span>, <span class="mono">15 айфоны.xlsx</span>,
+          <span class="mono">16 айфоны.xlsx</span>, <span class="mono">17 айфоны сим.xlsx</span>, <span class="mono">17 айфоны есим.xlsx</span>.
+        </div>
+
+        <div class="spacer"></div>
+        <textarea id="excelInput" placeholder="Вставьте общий список цен (13/14/15/16/17)..."></textarea>
 
         <div class="spacer"></div>
         <div class="row">
-          <button id="instCopyBtn" class="secondary" type="button" disabled>Скопировать</button>
-          <span id="instStatusPill" class="pill bad">Ожидаю ввод</span>
+          <button id="btnAll" type="button">Все прайсы</button>
+          <button id="btn13" type="button">13 айфоны</button>
+          <button id="btn14" type="button">14 айфоны</button>
+          <button id="btn15" type="button">15 айфоны</button>
+          <button id="btn16" type="button">16 айфоны</button>
+          <button id="btn17sim" type="button">17 айфоны SIM</button>
+          <button id="btn17esim" type="button">17 айфоны eSIM</button>
+          <button id="excelExampleBtn" class="ghost" type="button">Пример</button>
+        </div>
+
+        <div class="spacer"></div>
+        <div class="row">
+          <span id="excelStatus" class="pill bad">Ожидаю ввод</span>
+          <span id="excelStats" class="pill">—</span>
+        </div>
+
+        <div class="spacer"></div>
+        <div class="hint small">
+          Подсказка по 17-ым: для “17 SIM” приоритетно берётся строка без eSIM, для “17 eSIM” — строка с eSIM/🇯🇵/🇺🇸.
+          Если конкретного варианта нет — берётся любой совпадающий.
+        </div>
+
+        <div class="spacer"></div>
+        <div class="hint small">
+          Если браузер спросит разрешение на множественные загрузки — разрешите, чтобы “Все прайсы” скачал 6 файлов подряд.
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Excel прайсы — заметки</h2>
+        <p class="muted small">
+          Генерация работает полностью в браузере. Если видите “не найден шаблон” — проверьте, что файлы реально загружены рядом с HTML и имена совпадают.
+        </p>
+        <div class="hint small">
+          Если захотите хранить шаблоны в подпапке (например <span class="mono">/templates</span>), поменяйте в коде константу
+          <span class="mono">TEMPLATE_BASE</span>.
         </div>
       </section>
     </main>
@@ -380,27 +409,24 @@
 (() => {
   const $ = (id) => document.getElementById(id);
 
+  /* ===== helpers ===== */
   function formatRub(n){
     const s = String(Math.trunc(n));
     return s.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   }
-  function parseMoneyInput(s){
+  function parseMoneyDigits(s){
     const digits = String(s || "").replace(/\D/g, "");
     return digits ? parseInt(digits, 10) : 0;
-  }
-  function prettyInput(value){
-    const n = parseMoneyInput(value);
-    if(!n) return value && value.trim() ? "0" : "";
-    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
   }
   function roundRule(value){
     if(!isFinite(value) || value <= 0) return 0;
     const baseTh = Math.floor(value / 1000) * 1000;
     const rem = value - baseTh;
-    const eps = 1e-9;
-    if(baseTh === 0 && rem <= 250 + eps) return 990;
-    if(rem <= 250 + eps) return (baseTh - 1000) + 990;
-    if(rem < 750 - eps) return baseTh + 490;
+    if(rem <= 250){
+      if(baseTh === 0) return 990;
+      return (baseTh - 1000) + 990;
+    }
+    if(rem < 750) return baseTh + 490;
     return baseTh + 990;
   }
   function findLastNumberToken(line){
@@ -412,7 +438,7 @@
     return last;
   }
   function parsePriceFromToken(tokenText){
-    const digits = tokenText.replace(/\D/g, "");
+    const digits = String(tokenText || "").replace(/\D/g, "");
     if(!digits) return null;
     return parseInt(digits, 10);
   }
@@ -427,38 +453,45 @@
   }
   function debounce(fn, delay){
     let t = null;
-    return (...args) => {
-      clearTimeout(t);
-      t = setTimeout(() => fn(...args), delay);
-    };
+    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
   }
   function hotkey(handler){
     return (e) => {
       const isMac = (navigator.platform || "").toLowerCase().includes("mac");
       const mod = isMac ? e.metaKey : e.ctrlKey;
-      if(mod && e.key === "Enter"){
-        e.preventDefault();
-        handler();
-      }
+      if(mod && e.key === "Enter"){ e.preventDefault(); handler(); }
     };
   }
+  function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
 
-  /* tabs */
+  /* ===== Tabs ===== */
   const tabPriceBtn = $("tabPriceBtn");
-  const tabInstallmentBtn = $("tabInstallmentBtn");
+  const tabCashlessBtn = $("tabCashlessBtn");
+  const tabExcelBtn = $("tabExcelBtn");
   const priceTab = $("priceTab");
-  const installmentTab = $("installmentTab");
+  const cashlessTab = $("cashlessTab");
+  const excelTab = $("excelTab");
+
   function setTab(which){
     const isPrice = which === "price";
+    const isCashless = which === "cashless";
+    const isExcel = which === "excel";
+
     tabPriceBtn.classList.toggle("active", isPrice);
-    tabInstallmentBtn.classList.toggle("active", !isPrice);
+    tabCashlessBtn.classList.toggle("active", isCashless);
+    tabExcelBtn.classList.toggle("active", isExcel);
+
     priceTab.classList.toggle("active", isPrice);
-    installmentTab.classList.toggle("active", !isPrice);
+    cashlessTab.classList.toggle("active", isCashless);
+    excelTab.classList.toggle("active", isExcel);
   }
   tabPriceBtn.addEventListener("click", () => setTab("price"));
-  tabInstallmentBtn.addEventListener("click", () => setTab("installment"));
+  tabCashlessBtn.addEventListener("click", () => setTab("cashless"));
+  tabExcelBtn.addEventListener("click", () => setTab("excel"));
 
-  /* PRICE */
+  /* =========================
+     TAB 1: PRICE
+  ========================== */
   const inputArea = $("inputArea");
   const outputArea = $("outputArea");
   const convertBtn = $("convertBtn");
@@ -466,11 +499,14 @@
   const exampleBtn = $("exampleBtn");
   const copyBtn = $("copyBtn");
   const statusPill = $("statusPill");
+
   const statLines = $("statLines");
   const statFound = $("statFound");
   const statNoPrice = $("statNoPrice");
+
   const markupBtns = Array.from(document.querySelectorAll('#priceTab .markup-btn[data-factor]'));
   const markupPill = $("markupPill");
+
   let selectedFactor = 0.88;
 
   function cashAdd(p){
@@ -512,6 +548,7 @@
       if(res.ok) found++;
       return res.line;
     }).join("\n");
+
     outputArea.value = out;
 
     const nonEmpty = lines.filter(l => l.trim() !== "").length;
@@ -552,9 +589,7 @@
 Apple Watch SE 40 39.500🇦🇪
 
 16E 256 Black 54400🇮🇳
-17 Air 256 Blue eSim 70800🇺🇸
-
-Z Flip 7 5G 12/256 67.000🇦🇪`;
+17 Air 256 Blue eSim 70800🇺🇸`;
   });
 
   copyBtn.addEventListener("click", async () => {
@@ -567,202 +602,516 @@ Z Flip 7 5G 12/256 67.000🇦🇪`;
     }
   });
 
-  /* INSTALLMENT */
-  const quickCash = $("quickCash");
-  const quickDownpay = $("quickDownpay");
-  const qRemaining = $("qRemaining");
-  const qSum = $("qSum");
-  const qMonthly = $("qMonthly");
-  const qTotal = $("qTotal");
-  const pay6 = $("pay6");
-  const pay12 = $("pay12");
-  const pay24 = $("pay24");
-  const pay36 = $("pay36");
-  const monthsPill2 = $("monthsPill2");
-  const qCopyBtn = $("qCopyBtn");
-  const qStatus = $("qStatus");
-
+  /* =========================
+     TAB 2: CASHLESS
+  ========================== */
   const downpayInput = $("downpayInput");
-  const instInputArea = $("instInputArea");
-  const instOutputArea = $("instOutputArea");
-  const instCalcBtn = $("instCalcBtn");
-  const instClearBtn = $("instClearBtn");
-  const instExampleBtn = $("instExampleBtn");
-  const instCopyBtn = $("instCopyBtn");
-  const instStatusPill = $("instStatusPill");
-  const monthsPill = $("monthsPill");
-  const monthsBtns = Array.from(document.querySelectorAll('#installmentTab .markup-btn[data-months]'));
-  let selectedMonths = 6;
+  const cashlessPercent = $("cashlessPercent");
+  const cashlessRulePill = $("cashlessRulePill");
 
-  function installmentCalc(cash, downpay){
+  const cashlessInput = $("cashlessInput");
+  const cashlessOutput = $("cashlessOutput");
+  const cashlessCalcBtn = $("cashlessCalcBtn");
+  const cashlessClearBtn = $("cashlessClearBtn");
+  const cashlessExampleBtn = $("cashlessExampleBtn");
+  const cashlessCopyBtn = $("cashlessCopyBtn");
+  const cashlessStatusPill = $("cashlessStatusPill");
+  const monthsPill = $("monthsPill");
+
+  const monthsBtns = Array.from(document.querySelectorAll('#cashlessTab .markup-btn[data-months]'));
+  let selectedMonths = null;
+
+  function currentPercent(){
+    const v = parseFloat(String(cashlessPercent.value || "0").replace(",", "."));
+    return (isFinite(v) && v >= 0) ? Math.round(v) : 0;
+  }
+  function refreshCashlessPill(){
+    cashlessRulePill.textContent = `+${currentPercent()}%`;
+  }
+
+  function cashlessCalc(cash, downpay, percent){
     const remaining = Math.max(0, cash - downpay);
-    if(remaining === 0) return { remaining:0, sum:0 };
-    const base = remaining / 0.70;
+    const base = remaining * (1 + (percent / 100));
     const sum = roundRule(base);
-    return { remaining, sum };
+    return { sum };
   }
   function monthly(sum, months){
-    if(sum <= 0) return 0;
+    if(!months || sum <= 0) return 0;
     return Math.ceil(sum / months);
   }
 
-  function renderQuick(){
-    const cash = parseMoneyInput(quickCash.value);
-    const downpay = parseMoneyInput(quickDownpay.value);
-
-    if(!cash){
-      qRemaining.textContent = "—";
-      qSum.textContent = "—";
-      qMonthly.textContent = "—";
-      qTotal.textContent = "—";
-      pay6.textContent = "—";
-      pay12.textContent = "—";
-      pay24.textContent = "—";
-      pay36.textContent = "—";
-      qCopyBtn.disabled = true;
-      qStatus.textContent = "Введите цену";
-      return;
-    }
-
-    const { remaining, sum } = installmentCalc(cash, downpay);
-
-    qRemaining.textContent = formatRub(remaining) + "₽";
-    qSum.textContent = formatRub(sum) + "₽";
-    qMonthly.textContent = formatRub(monthly(sum, selectedMonths)) + "₽/мес";
-    qTotal.textContent = formatRub(downpay + sum) + "₽";
-
-    pay6.textContent = formatRub(monthly(sum, 6)) + "₽/мес";
-    pay12.textContent = formatRub(monthly(sum, 12)) + "₽/мес";
-    pay24.textContent = formatRub(monthly(sum, 24)) + "₽/мес";
-    pay36.textContent = formatRub(monthly(sum, 36)) + "₽/мес";
-
-    qCopyBtn.disabled = false;
-    qStatus.textContent = "Готово";
-  }
-  const renderQuickDebounced = debounce(renderQuick, 120);
-
-  function setActiveMonths(btn){
-    monthsBtns.forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    selectedMonths = parseInt(btn.dataset.months, 10);
-    monthsPill2.textContent = "Выбрано: " + selectedMonths + " мес";
-    monthsPill.textContent = "Срок: " + selectedMonths + " мес";
-    renderQuick();
-    if((instInputArea.value || "").trim() && (instOutputArea.value || "").trim()) doInstallment();
-  }
-  monthsBtns.forEach(btn => btn.addEventListener("click", () => setActiveMonths(btn)));
-
-  [quickCash, quickDownpay, downpayInput].forEach(inp => {
-    inp.addEventListener("blur", () => { inp.value = prettyInput(inp.value); });
-  });
-  quickCash.addEventListener("input", renderQuickDebounced);
-  quickDownpay.addEventListener("input", renderQuickDebounced);
-
-  qCopyBtn.addEventListener("click", async () => {
-    const cash = parseMoneyInput(quickCash.value);
-    const downpay = parseMoneyInput(quickDownpay.value);
-    if(!cash) return;
-    const { remaining, sum } = installmentCalc(cash, downpay);
-    const text =
-`Цена за наличные: ${formatRub(cash)}₽
-Взнос: ${formatRub(downpay)}₽
-Остаток: ${formatRub(remaining)}₽
-Сумма рассрочки: ${formatRub(sum)}₽
-Платёж ${selectedMonths} мес: ${formatRub(monthly(sum, selectedMonths))}₽/мес`;
-    try{
-      await navigator.clipboard.writeText(text);
-      qStatus.textContent = "Скопировано";
-      setTimeout(() => qStatus.textContent = "Готово", 700);
-    }catch(e){
-      qStatus.textContent = "Не удалось скопировать";
-      setTimeout(() => qStatus.textContent = "Готово", 900);
-    }
-  });
-
-  function convertLineInstallment(line, downpay, months){
+  function convertLineCashless(line, downpay, months, percent){
     const token = findLastNumberToken(line);
     if(!token) return { line, ok:false };
     const cash = parsePriceFromToken(token.text);
     if(cash == null) return { line, ok:false };
 
-    const { remaining, sum } = installmentCalc(cash, downpay);
-    const mp = monthly(sum, months);
-
+    const { sum } = cashlessCalc(cash, downpay, percent);
     const sumFmt = formatRub(sum) + "₽";
-    const mpFmt = formatRub(mp) + "₽/мес";
-
     let newLine = replaceToken(line, token, sumFmt);
-    if(downpay > 0){
-      const total = downpay + sum;
-      newLine += `  |  ${months}м: ${mpFmt}  |  взнос: ${formatRub(downpay)}₽  |  остаток: ${formatRub(remaining)}₽  |  итого: ${formatRub(total)}₽`;
-    } else {
+
+    if(months){
+      const mp = monthly(sum, months);
+      const mpFmt = formatRub(mp) + "₽/мес";
       newLine += `  |  ${months}м: ${mpFmt}`;
     }
     return { line: newLine, ok:true };
   }
 
-  function doInstallment(){
-    const downpay = parseMoneyInput(downpayInput.value);
-    const lines = (instInputArea.value ?? "").split(/\r?\n/);
+  function doCashless(){
+    const dp = parseMoneyDigits(downpayInput.value);
+    const pct = currentPercent();
 
+    cashlessPercent.value = String(pct);
+    refreshCashlessPill();
+
+    const lines = (cashlessInput.value ?? "").split(/\r?\n/);
     let found = 0;
     const out = lines.map(l => {
       if(l.trim() === "") return "";
-      const res = convertLineInstallment(l, downpay, selectedMonths);
+      const res = convertLineCashless(l, dp, selectedMonths, pct);
       if(res.ok) found++;
       return res.line;
     }).join("\n");
 
-    instOutputArea.value = out;
+    cashlessOutput.value = out;
 
     if(found > 0){
-      setPill(instStatusPill, true, "Готово");
-      instCopyBtn.disabled = false;
+      setPill(cashlessStatusPill, true, "Готово");
+      cashlessCopyBtn.disabled = false;
     } else {
-      setPill(instStatusPill, false, "Не нашёл цен");
-      instCopyBtn.disabled = true;
+      setPill(cashlessStatusPill, false, "Не нашёл цен");
+      cashlessCopyBtn.disabled = true;
     }
   }
-  const doInstallmentDebounced = debounce(doInstallment, 140);
 
-  instCalcBtn.addEventListener("click", doInstallment);
-  instInputArea.addEventListener("keydown", hotkey(doInstallment));
-  instInputArea.addEventListener("input", () => {
-    if((instInputArea.value || "").trim().length < 2000) doInstallmentDebounced();
-  });
-  downpayInput.addEventListener("input", () => {
-    if((instInputArea.value || "").trim()) doInstallmentDebounced();
-    renderQuickDebounced();
-  });
+  function setActiveMonths(btn){
+    monthsBtns.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    selectedMonths = parseInt(btn.dataset.months, 10);
+    monthsPill.textContent = "Выбрано: " + selectedMonths + " мес";
+    if((cashlessInput.value || "").trim() && (cashlessOutput.value || "").trim()) doCashless();
+  }
+  monthsBtns.forEach(btn => btn.addEventListener("click", () => setActiveMonths(btn)));
 
-  instClearBtn.addEventListener("click", () => {
+  cashlessCalcBtn.addEventListener("click", doCashless);
+  cashlessInput.addEventListener("keydown", hotkey(doCashless));
+
+  cashlessClearBtn.addEventListener("click", () => {
     downpayInput.value = "";
-    instInputArea.value = "";
-    instOutputArea.value = "";
-    instCopyBtn.disabled = true;
-    setPill(instStatusPill, false, "Ожидаю ввод");
+    cashlessInput.value = "";
+    cashlessOutput.value = "";
+    cashlessCopyBtn.disabled = true;
+
+    selectedMonths = null;
+    monthsBtns.forEach(b => b.classList.remove("active"));
+    monthsPill.textContent = "Срок не выбран";
+
+    refreshCashlessPill();
+    setPill(cashlessStatusPill, false, "Ожидаю ввод");
   });
 
-  instExampleBtn.addEventListener("click", () => {
+  cashlessExampleBtn.addEventListener("click", () => {
     downpayInput.value = "50 000";
-    instInputArea.value =
+    cashlessPercent.value = "25";
+    refreshCashlessPill();
+
+    selectedMonths = null;
+    monthsBtns.forEach(b => b.classList.remove("active"));
+    monthsPill.textContent = "Срок не выбран";
+
+    cashlessInput.value =
 `iPhone 15 Pro Max 100000
 MacBook Air 13 84990
 AirPods 4 19990`;
-    doInstallment();
   });
 
-  instCopyBtn.addEventListener("click", async () => {
+  cashlessCopyBtn.addEventListener("click", async () => {
     try{
-      await navigator.clipboard.writeText(instOutputArea.value);
-      setPill(instStatusPill, true, "Скопировано");
-      setTimeout(() => setPill(instStatusPill, true, "Готово"), 700);
+      await navigator.clipboard.writeText(cashlessOutput.value);
+      setPill(cashlessStatusPill, true, "Скопировано");
+      setTimeout(() => setPill(cashlessStatusPill, true, "Готово"), 700);
     }catch(e){
-      setPill(instStatusPill, false, "Не удалось скопировать");
+      setPill(cashlessStatusPill, false, "Не удалось скопировать");
     }
   });
 
-  renderQuick();
+  cashlessPercent.addEventListener("input", debounce(() => {
+    cashlessPercent.value = String(currentPercent());
+    refreshCashlessPill();
+    if((cashlessInput.value || "").trim() && (cashlessOutput.value || "").trim()) doCashless();
+  }, 80));
+
+  downpayInput.addEventListener("blur", () => {
+    const v = parseMoneyDigits(downpayInput.value);
+    downpayInput.value = v ? String(v).replace(/\B(?=(\d{3})+(?!\d))/g, " ") : "";
+  });
+
+  refreshCashlessPill();
+
+  /* =========================
+     TAB 3: EXCEL generator
+  ========================== */
+  const TEMPLATE_BASE = "./"; // если шаблоны в папке templates → "./templates/"
+
+  const excelInput = $("excelInput");
+  const excelStatus = $("excelStatus");
+  const excelStats = $("excelStats");
+  const excelExampleBtn = $("excelExampleBtn");
+
+  const btnAll = $("btnAll");
+  const btn13 = $("btn13");
+  const btn14 = $("btn14");
+  const btn15 = $("btn15");
+  const btn16 = $("btn16");
+  const btn17sim = $("btn17sim");
+  const btn17esim = $("btn17esim");
+
+  const excelButtons = [btnAll, btn13, btn14, btn15, btn16, btn17sim, btn17esim, excelExampleBtn];
+
+  const templates = {
+    t13: { label:"13 айфоны", file:"13 айфоны.xlsx", wantEsim: null },
+    t14: { label:"14 айфоны", file:"14 айфоны.xlsx", wantEsim: null },
+    t15: { label:"15 айфоны", file:"15 айфоны.xlsx", wantEsim: null },
+    t16: { label:"16 айфоны", file:"16 айфоны.xlsx", wantEsim: null },
+    t17sim: { label:"17 айфоны SIM", file:"17 айфоны сим.xlsx", wantEsim: false },
+    t17esim:{ label:"17 айфоны eSIM", file:"17 айфоны есим.xlsx", wantEsim: true },
+  };
+
+  async function fetchTemplateArrayBuffer(filename){
+    const url = TEMPLATE_BASE + encodeURIComponent(filename);
+    const res = await fetch(url, { cache: "no-store" });
+    if(!res.ok) throw new Error(`Не найден шаблон: ${filename} (HTTP ${res.status})`);
+    return await res.arrayBuffer();
+  }
+
+  function downloadArrayBufferAsFile(ab, filename){
+    const blob = new Blob([ab], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+      a.remove();
+    }, 1500);
+  }
+
+  function stripEmojiAndFlags(s){
+    let t = String(s || "");
+    t = t.replace(/[\u{1F1E6}-\u{1F1FF}]/gu, "");
+    try { t = t.replace(/\p{Extended_Pictographic}/gu, ""); } catch(e) {}
+    return t;
+  }
+  function normalizeSpaces(s){ return String(s || "").replace(/\s+/g, " ").trim(); }
+
+  function canonKeyFromText(text){
+    let raw = String(text || "");
+    const rawLower = raw.toLowerCase();
+    const esim = rawLower.includes("esim") || raw.includes("🇯🇵") || raw.includes("🇺🇸");
+
+    let t = rawLower;
+    t = t.replace(/apple/g, " ");
+    t = t.replace(/iphone/g, " ");
+    t = stripEmojiAndFlags(t);
+    t = t.replace(/[()\-–—,:;•▪️]/g, " ");
+    t = t.replace(/\+/g, " plus ");
+    t = t.replace(/\bpro\s*max\b/g, " pro max ");
+    t = t.replace(/\bpromax\b/g, " pro max ");
+    t = t.replace(/\b1\s*tb\b/g, " 1tb ");
+    t = t.replace(/\b(\d+)\s*gb\b/g, "$1gb");
+    t = t.replace(/\b(\d+)\s*tb\b/g, "$1tb");
+    t = normalizeSpaces(t);
+
+    const tokens = t.split(" ").filter(Boolean);
+    const seriesIdx = tokens.findIndex(x => /^(1[3-7])$/.test(x) || /^(1[3-7])[a-z]$/.test(x));
+    if(seriesIdx === -1) return { key: t, esim };
+
+    const series = tokens[seriesIdx].replace(/[^0-9]/g, "");
+    let variant = "";
+    const hasAir = tokens.includes("air");
+    const hasPlus = tokens.includes("plus");
+    const hasPro = tokens.includes("pro");
+    const hasMax = tokens.includes("max");
+
+    if(hasAir) variant = "air";
+    else if(hasPro && hasMax) variant = "pro max";
+    else if(hasPro) variant = "pro";
+    else if(hasPlus) variant = "plus";
+
+    let storage = "";
+    for(const tk of tokens){
+      if(/^(64|128|256|512)gb$/.test(tk)){ storage = tk; break; }
+      if(/^1tb$/.test(tk) || /^2tb$/.test(tk)){ storage = tk; break; }
+    }
+
+    const drop = new Set(["apple","iphone","esim", series, "pro", "max", "plus", "air"]);
+    let rest = tokens.filter(x => !drop.has(x));
+    if(storage) rest = rest.filter(x => x !== storage);
+    rest = rest.filter(x => x !== "gb" && x !== "tb");
+    const color = rest.join(" ").trim();
+
+    const key = normalizeSpaces([series, variant, storage, color].filter(Boolean).join(" "));
+    return { key, esim };
+  }
+
+  function buildPriceMapFromInput(multiline){
+    const map = new Map();
+    const lines = String(multiline || "").split(/\r?\n/);
+    let parsed = 0;
+
+    for(const line of lines){
+      if(!line.trim()) continue;
+      const token = findLastNumberToken(line);
+      if(!token) continue;
+      const n = parsePriceFromToken(token.text);
+      if(n == null) continue;
+
+      const withoutPrice = replaceToken(line, token, " ");
+      const { key, esim } = canonKeyFromText(withoutPrice);
+      if(!key) continue;
+
+      const priceStr = formatRub(n) + "₽";
+      const entry = map.get(key) || {};
+      if(esim) entry.esim = priceStr;
+      else entry.sim = priceStr;
+      entry.last = priceStr;
+      map.set(key, entry);
+
+      parsed++;
+    }
+    return { map, parsedLines: parsed };
+  }
+
+  function getPriceFromMap(map, key, wantEsim){
+    const entry = map.get(key);
+    if(!entry) return null;
+    if(wantEsim === true) return entry.esim ?? entry.sim ?? entry.last ?? null;
+    if(wantEsim === false) return entry.sim ?? entry.esim ?? entry.last ?? null;
+    return entry.last ?? null;
+  }
+
+  function detectHeaderAndCols(ws){
+    const ref = ws["!ref"];
+    if(!ref) return null;
+    const range = XLSX.utils.decode_range(ref);
+    const maxScan = Math.min(range.e.r, range.s.r + 40);
+
+    const headerKeywordsPrice = /(цена|price)/i;
+    const headerKeywordsModel = /(модель|наимен|назван|товар|model|item|product)/i;
+
+    for(let r = range.s.r; r <= maxScan; r++){
+      let rowVals = [];
+      for(let c = range.s.c; c <= range.e.c; c++){
+        const addr = XLSX.utils.encode_cell({r,c});
+        const cell = ws[addr];
+        rowVals.push(cell ? String(cell.v ?? "").trim() : "");
+      }
+      const joined = rowVals.join(" | ").toLowerCase();
+      if(joined.includes("цена") || joined.includes("price")){
+        let priceCol = null;
+        let modelCol = null;
+        for(let c = range.s.c; c <= range.e.c; c++){
+          const h = rowVals[c - range.s.c].toLowerCase();
+          if(priceCol === null && headerKeywordsPrice.test(h)) priceCol = c;
+          if(modelCol === null && headerKeywordsModel.test(h)) modelCol = c;
+        }
+        if(priceCol === null) priceCol = range.e.c;
+        if(modelCol === null) modelCol = range.s.c;
+        return { range, headerRow: r, modelCol, priceCol };
+      }
+    }
+    return { range, headerRow: range.s.r, modelCol: range.s.c, priceCol: range.e.c };
+  }
+
+  function getCell(ws, r, c){
+    const addr = XLSX.utils.encode_cell({r,c});
+    return ws[addr];
+  }
+  function getCellValue(ws, r, c){
+    const cell = getCell(ws, r, c);
+    return cell ? cell.v : "";
+  }
+  function setCellValue(ws, r, c, v){
+    const addr = XLSX.utils.encode_cell({r,c});
+    const cell = ws[addr] || (ws[addr] = { t:"s", v:"" });
+    if(typeof v === "number"){ cell.t = "n"; cell.v = v; }
+    else { cell.t = "s"; cell.v = String(v); }
+  }
+
+  async function buildAndFillWorkbook(template, priceMap){
+    const buf = await fetchTemplateArrayBuffer(template.file);
+    const wb = XLSX.read(buf, { type: "array", cellStyles: true });
+
+    let changed = 0;
+    let missing = 0;
+
+    for(const sheetName of wb.SheetNames){
+      const ws = wb.Sheets[sheetName];
+      const meta = detectHeaderAndCols(ws);
+      if(!meta) continue;
+
+      const { range, headerRow, modelCol, priceCol } = meta;
+
+      for(let r = headerRow + 1; r <= range.e.r; r++){
+        const modelVal = getCellValue(ws, r, modelCol);
+        const modelStr = normalizeSpaces(String(modelVal || ""));
+        if(!modelStr) continue;
+        if(/итого|total/i.test(modelStr)) continue;
+
+        const { key } = canonKeyFromText(modelStr);
+        if(!key) continue;
+
+        const price = getPriceFromMap(priceMap, key, template.wantEsim);
+        if(price){
+          setCellValue(ws, r, priceCol, price);
+          changed++;
+        } else {
+          setCellValue(ws, r, priceCol, "По запросу");
+          missing++;
+        }
+      }
+    }
+
+    return { wb, changed, missing };
+  }
+
+  function makeStamp(d){
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  }
+
+  async function generateExcelSingle(template){
+    if(!window.XLSX){
+      setPill(excelStatus, false, "XLSX не загрузился (CDN).");
+      return;
+    }
+    const inputText = String(excelInput.value || "").trim();
+    if(!inputText){
+      setPill(excelStatus, false, "Вставьте входные данные");
+      excelStats.textContent = "—";
+      return;
+    }
+
+    setPill(excelStatus, true, "Собираю цены…");
+    excelStats.textContent = "—";
+
+    const { map: priceMap, parsedLines } = buildPriceMapFromInput(inputText);
+    if(parsedLines === 0){
+      setPill(excelStatus, false, "Не нашёл цен во входе");
+      return;
+    }
+
+    let filled;
+    try{
+      filled = await buildAndFillWorkbook(template, priceMap);
+    }catch(err){
+      setPill(excelStatus, false, String(err.message || err));
+      return;
+    }
+
+    const now = new Date();
+    const outName = `${template.label} (${makeStamp(now)}).xlsx`;
+
+    try{
+      const ab = XLSX.write(filled.wb, { bookType: "xlsx", type: "array" });
+      downloadArrayBufferAsFile(ab, outName);
+      setPill(excelStatus, true, "Excel скачан");
+      excelStats.textContent = `Входных цен: ${parsedLines} · Заполнено: ${filled.changed} · По запросу: ${filled.missing}`;
+    }catch(err){
+      setPill(excelStatus, false, "Не удалось сохранить файл");
+    }
+  }
+
+  let allBusy = false;
+
+  async function generateAllExcels(){
+    if(allBusy) return;
+    if(!window.XLSX){
+      setPill(excelStatus, false, "XLSX не загрузился (CDN).");
+      return;
+    }
+    const inputText = String(excelInput.value || "").trim();
+    if(!inputText){
+      setPill(excelStatus, false, "Вставьте входные данные");
+      excelStats.textContent = "—";
+      return;
+    }
+
+    const { map: priceMap, parsedLines } = buildPriceMapFromInput(inputText);
+    if(parsedLines === 0){
+      setPill(excelStatus, false, "Не нашёл цен во входе");
+      excelStats.textContent = "—";
+      return;
+    }
+
+    allBusy = true;
+    excelButtons.forEach(b => b && (b.disabled = true));
+    setPill(excelStatus, true, "Готовлю 6 прайсов…");
+    excelStats.textContent = `Входных цен: ${parsedLines}`;
+
+    const now = new Date();
+    const stamp = makeStamp(now);
+
+    const list = [templates.t13, templates.t14, templates.t15, templates.t16, templates.t17sim, templates.t17esim];
+
+    let totalChanged = 0;
+    let totalMissing = 0;
+    let okCount = 0;
+
+    for(let i = 0; i < list.length; i++){
+      const t = list[i];
+      setPill(excelStatus, true, `${i+1}/6: ${t.label}…`);
+      try{
+        const filled = await buildAndFillWorkbook(t, priceMap);
+        const outName = `${t.label} (${stamp}).xlsx`;
+        const ab = XLSX.write(filled.wb, { bookType: "xlsx", type: "array" });
+        downloadArrayBufferAsFile(ab, outName);
+
+        okCount++;
+        totalChanged += filled.changed;
+        totalMissing += filled.missing;
+
+        // небольшая пауза — помогает браузеру корректно обработать очередные скачивания
+        await sleep(180);
+      }catch(err){
+        // продолжаем дальше, но показываем что один из файлов упал
+        setPill(excelStatus, false, `Ошибка: ${t.label} — ${String(err.message || err)}`);
+        await sleep(450);
+      }
+    }
+
+    if(okCount === 6){
+      setPill(excelStatus, true, "Скачано: 6 файлов");
+    } else {
+      setPill(excelStatus, false, `Скачано: ${okCount}/6 (часть с ошибками)`);
+    }
+    excelStats.textContent = `Входных цен: ${parsedLines} · Заполнено: ${totalChanged} · По запросу: ${totalMissing}`;
+
+    excelButtons.forEach(b => b && (b.disabled = false));
+    allBusy = false;
+  }
+
+  btnAll.addEventListener("click", generateAllExcels);
+  btn13.addEventListener("click", () => generateExcelSingle(templates.t13));
+  btn14.addEventListener("click", () => generateExcelSingle(templates.t14));
+  btn15.addEventListener("click", () => generateExcelSingle(templates.t15));
+  btn16.addEventListener("click", () => generateExcelSingle(templates.t16));
+  btn17sim.addEventListener("click", () => generateExcelSingle(templates.t17sim));
+  btn17esim.addEventListener("click", () => generateExcelSingle(templates.t17esim));
+
+  excelExampleBtn.addEventListener("click", () => {
+    excelInput.value =
+`13 128GB Midnight 🇮🇳 40.490₽
+14 128GB Midnight 🇮🇳 45.490₽
+15 128GB Black 🇮🇳 48.990₽
+16 128GB Black 🇮🇳 58.490₽
+17 256GB Black 🇯🇵 71.490₽`;
+    setPill(excelStatus, false, "Ожидаю ввод");
+    excelStats.textContent = "—";
+  });
+
 })();
 </script>
 </body>
