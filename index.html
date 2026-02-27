@@ -1,733 +1,578 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Прайс / Безнал / Excel</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AppAvenue — Калькулятор цен</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f13;
+    --surface: #1a1a22;
+    --surface2: #22222d;
+    --border: #2e2e3e;
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --accent3: #43e97b;
+    --text: #f0f0f8;
+    --text-muted: #888899;
+    --radius: 14px;
+    --shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Montserrat', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 12px 60px;
+  }
+  .header { text-align: center; margin-bottom: 24px; }
+  .logo {
+    font-size: 30px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-top: 4px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    width: 100%;
+    max-width: 620px;
+    box-shadow: var(--shadow);
+  }
+  .tabs {
+    display: flex;
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 24px;
+    gap: 4px;
+  }
+  .tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 10px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(108,99,255,0.35);
+  }
+  .panel { display: none; }
+  .panel.active { display: block; }
 
-  <!-- SheetJS (XLSX) для генерации Excel в браузере -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  .sec-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+  }
+  textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.75;
+    padding: 14px;
+    outline: none;
+    resize: vertical;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    min-height: 140px;
+  }
+  textarea::placeholder { color: #44445a; }
+  textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(108,99,255,0.15);
+  }
+  textarea.output-area {
+    color: var(--accent3);
+    cursor: default;
+  }
+  textarea.output-area:focus {
+    border-color: var(--accent3);
+    box-shadow: 0 0 0 3px rgba(67,233,123,0.1);
+  }
+  textarea.output-inst {
+    color: #ff9ab5;
+  }
 
-  <style>
-    :root{
-      --bg:#0b0c10;
-      --panel:#11131a;
-      --panel-2:#0f1117;
-      --text:#f5f7ff;
-      --muted:#b5bbd6;
-      --accent:#7c9bff;
-      --danger:#ff6b6b;
-      --ok:#7dff9b;
-      --border:rgba(255,255,255,0.08);
-      --shadow: 0 8px 30px rgba(0,0,0,0.35);
-      --radius: 16px;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
-      background:
-        radial-gradient(1200px 600px at 10% -10%, rgba(124,155,255,0.18), transparent 60%),
-        radial-gradient(1200px 600px at 90% 10%, rgba(102,255,209,0.12), transparent 60%),
-        var(--bg);
-      color:var(--text);
-    }
-    header{
-      padding: 28px 20px 10px;
-      max-width: 1150px;
-      margin: 0 auto;
-    }
-    h1{
-      font-size: clamp(22px, 3vw, 34px);
-      margin: 0 0 8px;
-    }
-    header p{
-      margin:0 0 10px;
-      color:var(--muted);
-      line-height:1.5;
-      max-width: 980px;
-      font-size: 13px;
-    }
+  .div { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
 
-    .tabbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
-    .tab-btn{
-      background: transparent;
-      border:1px solid var(--border);
-      color: var(--text);
-      padding: 10px 12px;
-      border-radius: 999px;
-      font-weight: 750;
-      cursor:pointer
-    }
-    .tab-btn.active{
-      background: rgba(124,155,255,0.18);
-      border-color: rgba(124,155,255,0.45);
-    }
+  .quick-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .quick-btn {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+  }
+  .quick-btn:hover { border-color: var(--accent); color: var(--text); }
+  .quick-btn.sel-pct {
+    background: rgba(108,99,255,0.18);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .quick-btn.sel-mon {
+    background: rgba(255,101,132,0.15);
+    border-color: var(--accent2);
+    color: var(--accent2);
+  }
 
-    main{
-      max-width:1150px;
-      margin: 0 auto;
-      padding: 10px 20px 50px;
-      display:grid;
-      grid-template-columns: 1fr;
-      gap: 16px;
-    }
-    @media (min-width: 980px){
-      main{ grid-template-columns: 1fr 1fr; align-items:start; }
-    }
-    .tab-panel{display:none}
-    .tab-panel.active{display:block}
+  .pct-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 0;
+  }
+  .pct-input-wrap {
+    position: relative;
+    flex: 0 0 130px;
+  }
+  .pct-input-wrap .unit {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 13px;
+    pointer-events: none;
+  }
+  input[type="number"] {
+    width: 100%;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 9px 32px 9px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+    -moz-appearance: textfield;
+  }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+  input[type="number"]:focus { border-color: var(--accent); }
+  .pct-label { color: var(--text-muted); font-size: 12px; font-weight: 600; }
 
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent 30%), var(--panel);
-      border:1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 18px 18px 16px;
-    }
-    .card h2{font-size: 18px; margin: 0 0 10px;}
-    .muted{color:var(--muted)}
-    .small{font-size: 12.5px}
-    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
-    .spacer{height:10px}
+  .btn-calc {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+    margin: 18px 0 16px;
+  }
+  .btn-calc:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(108,99,255,0.4); }
+  .btn-calc:active { transform: translateY(0); }
+  .btn-calc.red { background: linear-gradient(135deg, var(--accent2), #f97316); }
+  .btn-calc.red:hover { box-shadow: 0 8px 24px rgba(255,101,132,0.4); }
 
-    textarea{
-      width:100%;
-      min-height: 360px;
-      resize: vertical;
-      padding: 12px 12px;
-      background: var(--panel-2);
-      border:1px solid var(--border);
-      border-radius: 12px;
-      color: var(--text);
-      line-height:1.45;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size: 12.6px;
-    }
-    input[type="text"], input[type="number"]{
-      padding: 10px 12px;
-      background: var(--panel-2);
-      border:1px solid var(--border);
-      border-radius: 12px;
-      color: var(--text);
-      outline:none;
-      font-size: 13px;
-    }
-    input.compact{width: 120px}
-    input.mid{width: 220px}
+  .btn-copy {
+    width: 100%;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-muted);
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+  }
+  .btn-copy:hover { border-color: var(--accent3); color: var(--accent3); }
+  .btn-copy svg { width: 15px; height: 15px; flex-shrink: 0; }
 
-    button{
-      appearance:none;
-      border:1px solid transparent;
-      background: linear-gradient(90deg, var(--accent), #9b7cff);
-      color:white;
-      padding: 10px 14px;
-      border-radius: 12px;
-      font-weight: 750;
-      cursor:pointer;
-      transition: transform .05s ease, filter .2s ease, opacity .2s ease;
-    }
-    button:hover{filter: brightness(1.05)}
-    button:active{transform: translateY(1px)}
-    button.secondary{background: transparent; border-color: var(--border); color: var(--text);}
-    button.ghost{background: transparent; border-color: transparent; color: var(--muted);}
-    button:disabled{ opacity: .55; cursor:not-allowed; }
+  .stats-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .stat-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .stat-chip b { color: var(--text); font-family: 'JetBrains Mono', monospace; }
 
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      font-size: 11.5px;
-      background: rgba(255,255,255,0.06);
-      border:1px solid var(--border);
-      color: var(--muted);
-      white-space: nowrap;
-    }
-    .pill.ok{color: #d9ffe5; background: rgba(125,255,155,0.08); border-color: rgba(125,255,155,0.25)}
-    .pill.bad{color: #ffe1e1; background: rgba(255,107,107,0.08); border-color: rgba(255,107,107,0.25)}
+  .note {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 10px;
+    line-height: 1.6;
+  }
 
-    .hint{
-      padding: 10px 12px;
-      background: rgba(124,155,255,0.08);
-      border:1px solid rgba(124,155,255,0.28);
-      border-radius: 12px;
-      color: #e8ecff;
-    }
-
-    .markup-bar{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:10px;
-      align-items:center;
-    }
-    .markup-btn{
-      background: transparent;
-      border:1px solid var(--border);
-      color: var(--text);
-      padding: 8px 10px;
-      border-radius: 999px;
-      font-weight: 800;
-      font-size: 12px;
-      line-height: 1;
-      cursor:pointer;
-    }
-    .markup-btn.active{
-      background: rgba(124,155,255,0.18);
-      border-color: rgba(124,155,255,0.45);
-    }
-
-    .stats{
-      display:grid;
-      grid-template-columns: repeat(3, minmax(0,1fr));
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .stat{
-      background: var(--panel-2);
-      border:1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px 12px;
-    }
-    .stat .label{font-size: 11.5px; color: var(--muted)}
-    .stat .value{font-size: 18px; font-weight: 850; margin-top: 2px}
-    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;}
-  </style>
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--accent3);
+    color: #0f0f13;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 11px 24px;
+    border-radius: 50px;
+    transition: transform 0.3s ease;
+    pointer-events: none;
+    z-index: 200;
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
 </head>
-
 <body>
-  <header>
-    <h1>Инструменты прайса</h1>
-    <p>
-      <b>Прайс</b> — теперь считает так: <b>цена × (1 + %/100)</b> и округляет по старой логике. Добавлена кнопка <b>+5.5%</b>.<br>
-      <b>Безналичная оплата</b> — на вход цена за нал, считаем (цена − взнос) + % и округляем. Срок не выбран по умолчанию.<br>
-      <b>Excel прайсы</b> — заполняет шаблоны, где строка модели — заголовок, а ниже идут цвета.
-    </p>
 
-    <div class="tabbar" role="tablist" aria-label="Разделы">
-      <button class="tab-btn active" id="tabPriceBtn" type="button">Прайс</button>
-      <button class="tab-btn" id="tabCashlessBtn" type="button">Безналичная оплата</button>
-      <button class="tab-btn" id="tabExcelBtn" type="button">Excel прайсы</button>
-    </div>
-  </header>
+<div class="header">
+  <div class="logo">AppAvenue</div>
+  <div class="subtitle">Калькулятор цен</div>
+</div>
+
+<div class="card">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('price')">💰 Наценка</button>
+    <button class="tab-btn" onclick="switchTab('installment')">📅 Рассрочка</button>
+  </div>
 
   <!-- ===== TAB 1: PRICE ===== -->
-  <div id="priceTab" class="tab-panel active">
-    <main>
-      <section class="card">
-        <h2>Прайс — вход</h2>
-        <p class="muted small">
-          В каждой строке ищем <b>последнее числовое значение</b> — считаем его ценой.
-        </p>
+  <div class="panel active" id="tab-price">
 
-        <div class="hint small">
-          Наценка (формула: <span class="mono">цена × (1 + %/100)</span>):
-          <div class="markup-bar" role="group" aria-label="Выбор наценки">
-            <button class="markup-btn" data-pct="5.5" type="button">+5.5%</button>
-            <button class="markup-btn" data-pct="6" type="button">+6%</button>
-            <button class="markup-btn" data-pct="7" type="button">+7%</button>
-            <button class="markup-btn" data-pct="8" type="button">+8%</button>
-            <button class="markup-btn" data-pct="10" type="button">+10%</button>
-            <button class="markup-btn active" data-pct="12" type="button">+12%</button>
-            <button class="markup-btn" data-pct="15" type="button">+15%</button>
-            <button class="markup-btn" data-pct="20" type="button">+20%</button>
-            <button class="markup-btn" data-pct="30" type="button">+30%</button>
-            <span class="pill ok" id="markupPill">Выбрано: +12% (×1.12)</span>
-          </div>
-        </div>
+    <div class="sec-label">Входной прайс</div>
+    <textarea id="priceInput" placeholder="17 512 White 🇮🇳 79500 1sim&#10;Air 256 White 🇺🇸 66000 еSim&#10;Apple Watch Ultra 3 49  Black Milanese Loop L 77000&#10;iPad Mini 7 2024 128 Blue WiFi 🇺🇸 35000"></textarea>
 
-        <div class="spacer"></div>
-        <textarea id="inputArea" placeholder="Вставьте список..."></textarea>
+    <div class="div"></div>
 
-        <div class="spacer"></div>
-        <div class="row">
-          <button id="convertBtn" type="button">Посчитать</button>
-          <button id="clearBtn" class="secondary" type="button">Очистить</button>
-          <button id="exampleBtn" class="ghost" type="button">Пример</button>
-          <span class="pill" title="Ctrl/⌘ + Enter">Ctrl/⌘+Enter</span>
-        </div>
+    <div class="sec-label">Наценка — быстрый выбор</div>
+    <div class="quick-row" id="markup-btns">
+      <button class="quick-btn sel-pct" onclick="selectMarkup(5.5,this)">+5.5%</button>
+      <button class="quick-btn" onclick="selectMarkup(6,this)">+6%</button>
+      <button class="quick-btn" onclick="selectMarkup(8,this)">+8%</button>
+      <button class="quick-btn" onclick="selectMarkup(10,this)">+10%</button>
+      <button class="quick-btn" onclick="selectMarkup(12,this)">+12%</button>
+      <button class="quick-btn" onclick="selectMarkup(20,this)">+20%</button>
+      <button class="quick-btn" onclick="selectMarkup(25,this)">+25%</button>
+    </div>
 
-        <div class="stats">
-          <div class="stat"><div class="label">Строк всего</div><div id="statLines" class="value">0</div></div>
-          <div class="stat"><div class="label">Цен найдено</div><div id="statFound" class="value">0</div></div>
-          <div class="stat"><div class="label">Без цены</div><div id="statNoPrice" class="value">0</div></div>
-        </div>
+    <div class="pct-row">
+      <span class="pct-label">Своя наценка:</span>
+      <div class="pct-input-wrap">
+        <input type="number" id="markupCustom" value="5.5" min="1" max="999" oninput="onCustomMarkup()" />
+        <span class="unit">%</span>
+      </div>
+    </div>
 
-        <div class="spacer"></div>
-        <div class="hint small">
-          Округление по остатку внутри тысячи:
-          ≤250 → 990 предыдущей; &gt;250 и &lt;750 → 490 текущей; ≥750 → 990 текущей.
-        </div>
-      </section>
+    <button class="btn-calc" onclick="calcPrice()">⚡ Применить наценку</button>
 
-      <section class="card">
-        <h2>Прайс — выход</h2>
-        <p class="muted small">Разделитель тысяч точкой + символ ₽. Остальной текст строки сохраняется.</p>
-        <textarea id="outputArea" placeholder="Здесь появится результат..." readonly></textarea>
-        <div class="spacer"></div>
-        <div class="row">
-          <button id="copyBtn" class="secondary" type="button" disabled>Скопировать</button>
-          <span id="statusPill" class="pill bad">Ожидаю ввод</span>
-        </div>
-      </section>
-    </main>
+    <div class="sec-label">Готовый прайс</div>
+    <textarea id="priceOutput" class="output-area" readonly placeholder="Здесь появится результат..."></textarea>
+
+    <div class="stats-row" id="priceStats" style="display:none">
+      <div class="stat-chip">Позиций обработано: <b id="stat-lines">0</b></div>
+      <div class="stat-chip">Наценка: <b id="stat-pct">20%</b></div>
+    </div>
+
+    <button class="btn-copy" onclick="copyText('priceOutput')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Скопировать прайс
+    </button>
+
+    <p class="note">Округление: до ближайшей тысячи вверх − 10 ₽ (формат X X X 990)<br>Находит последнее число ≥ 1 000 в каждой строке</p>
   </div>
 
-  <!-- ===== TAB 2: CASHLESS ===== -->
-  <div id="cashlessTab" class="tab-panel">
-    <main>
-      <section class="card">
-        <h2>Безналичная оплата — вход</h2>
-        <p class="muted small">
-          На входе — <b>цена за наличные</b>. Безнал = round((цена − взнос) × (1 + %/100)).
-          <b>Срок не выбран по умолчанию</b>: если срок не выбрать, в выводе будет только сумма безнала.
-        </p>
+  <!-- ===== TAB 2: INSTALLMENT ===== -->
+  <div class="panel" id="tab-installment">
 
-        <div class="hint small">
-          <div class="row" style="justify-content:space-between">
-            <div class="row">
-              <span class="muted small">Взнос, ₽:</span>
-              <input id="downpayInput" class="mid" type="text" placeholder="например 50 000" inputmode="numeric" />
-            </div>
-            <div class="row">
-              <span class="muted small">Наценка безнал, %:</span>
-              <input id="cashlessPercent" class="compact" type="number" min="0" step="1" value="25" />
-            </div>
-            <span class="pill" id="cashlessRulePill">+25%</span>
-          </div>
+    <div class="sec-label">Входной прайс (цены за наличку)</div>
+    <textarea id="instInput" placeholder="17 512 White 🇮🇳 79500 1sim&#10;Air 256 White 🇺🇸 66000 еSim&#10;Apple Watch Ultra 3 49  Black Milanese Loop L 77000&#10;iPad Mini 7 2024 128 Blue WiFi 🇺🇸 35000"></textarea>
 
-          <div class="spacer"></div>
+    <div class="div"></div>
 
-          Срок:
-          <div class="markup-bar" role="group" aria-label="Срок оплаты">
-            <button class="markup-btn" data-months="6" type="button">6 мес</button>
-            <button class="markup-btn" data-months="12" type="button">12 мес</button>
-            <button class="markup-btn" data-months="24" type="button">24 мес</button>
-            <button class="markup-btn" data-months="36" type="button">36 мес</button>
-            <span class="pill" id="monthsPill">Срок не выбран</span>
-          </div>
-        </div>
+    <div class="sec-label">Первоначальный взнос</div>
+    <div class="pct-row" style="margin-bottom:0">
+      <div class="pct-input-wrap" style="flex:0 0 180px">
+        <input type="number" id="downPay" placeholder="0 — без взноса" min="0" />
+        <span class="unit">₽</span>
+      </div>
+      <span class="pct-label" style="font-size:11px">оставьте 0, если взноса нет</span>
+    </div>
 
-        <div class="spacer"></div>
-        <textarea id="cashlessInput" placeholder="Вставьте список цен за наличные..."></textarea>
+    <div class="div"></div>
 
-        <div class="spacer"></div>
-        <div class="row">
-          <button id="cashlessCalcBtn" type="button">Рассчитать</button>
-          <button id="cashlessClearBtn" class="secondary" type="button">Очистить</button>
-          <button id="cashlessExampleBtn" class="ghost" type="button">Пример</button>
-          <span class="pill" title="Ctrl/⌘ + Enter">Ctrl/⌘+Enter</span>
-        </div>
-      </section>
+    <div class="sec-label">Срок рассрочки</div>
+    <div class="quick-row" id="month-btns">
+      <button class="quick-btn" style="flex:1" onclick="selectMonths(6,this)">6 мес.</button>
+      <button class="quick-btn sel-mon" style="flex:1" onclick="selectMonths(12,this)">12 мес.</button>
+      <button class="quick-btn" style="flex:1" onclick="selectMonths(24,this)">24 мес.</button>
+      <button class="quick-btn" style="flex:1" onclick="selectMonths(36,this)">36 мес.</button>
+    </div>
 
-      <section class="card">
-        <h2>Безналичная оплата — выход</h2>
-        <textarea id="cashlessOutput" placeholder="Здесь появится результат..." readonly></textarea>
-        <div class="spacer"></div>
-        <div class="row">
-          <button id="cashlessCopyBtn" class="secondary" type="button" disabled>Скопировать</button>
-          <span id="cashlessStatusPill" class="pill bad">Ожидаю ввод</span>
-        </div>
-      </section>
-    </main>
+    <button class="btn-calc red" onclick="calcInstallment()">⚡ Рассчитать рассрочку</button>
+
+    <div class="sec-label">Результат рассрочки</div>
+    <textarea id="instOutput" class="output-area output-inst" readonly placeholder="Здесь появится результат..." style="min-height:160px"></textarea>
+
+    <div class="stats-row" id="instStats" style="display:none">
+      <div class="stat-chip">Позиций: <b id="stat-inst-lines">0</b></div>
+      <div class="stat-chip">Срок: <b id="stat-months">12 мес.</b></div>
+    </div>
+
+    <button class="btn-copy" onclick="copyText('instOutput')" style="border-color: rgba(255,101,132,0.3);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Скопировать расчёт
+    </button>
+
+    <p class="note">+25% к наличной цене · Если взнос указан — остаток × 1.25 · Округление X X X 990 ₽</p>
   </div>
+</div>
 
-  <!-- ===== TAB 3: EXCEL ===== -->
-  <div id="excelTab" class="tab-panel">
-    <main>
-      <section class="card">
-        <h2>Excel прайсы — вход</h2>
-        <div class="hint small">
-          Шаблоны рядом с <span class="mono">index.html</span>:
-          <span class="mono">13 айфоны.xlsx</span>, <span class="mono">14 айфоны.xlsx</span>, <span class="mono">15 айфоны.xlsx</span>,
-          <span class="mono">16 айфоны.xlsx</span>, <span class="mono">17 айфоны сим.xlsx</span>, <span class="mono">17 айфоны есим.xlsx</span>.
-        </div>
-
-        <div class="spacer"></div>
-        <textarea id="excelInput" placeholder="Вставьте общий список цен (13/14/15/16/17)..."></textarea>
-
-        <div class="spacer"></div>
-        <div class="row">
-          <button id="btnAll" type="button">Все прайсы</button>
-          <button id="btn13" type="button">13 айфоны</button>
-          <button id="btn14" type="button">14 айфоны</button>
-          <button id="btn15" type="button">15 айфоны</button>
-          <button id="btn16" type="button">16 айфоны</button>
-          <button id="btn17sim" type="button">17 айфоны SIM</button>
-          <button id="btn17esim" type="button">17 айфоны eSIM</button>
-          <button id="excelExampleBtn" class="ghost" type="button">Пример</button>
-        </div>
-
-        <div class="spacer"></div>
-        <div class="row">
-          <span id="excelStatus" class="pill bad">Ожидаю ввод</span>
-          <span id="excelStats" class="pill">—</span>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>Excel прайсы — заметки</h2>
-        <p class="muted small">Если видите “не найден шаблон” — проверьте имена файлов и что они лежат рядом с HTML.</p>
-      </section>
-    </main>
-  </div>
+<div class="toast" id="toast">✓ Скопировано!</div>
 
 <script>
-(() => {
-  const $ = (id) => document.getElementById(id);
+let currentMarkup = 5.5;
+let currentMonths = 12;
 
-  /* ===== helpers ===== */
-  function formatRub(n){
-    const s = String(Math.trunc(n));
-    return s.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  }
-  function parseMoneyDigits(s){
-    const digits = String(s || "").replace(/\D/g, "");
-    return digits ? parseInt(digits, 10) : 0;
-  }
-  function roundRule(value){
-    if(!isFinite(value) || value <= 0) return 0;
-    const baseTh = Math.floor(value / 1000) * 1000;
-    const rem = value - baseTh;
-    if(rem <= 250){
-      if(baseTh === 0) return 990;
-      return (baseTh - 1000) + 990;
-    }
-    if(rem < 750) return baseTh + 490;
-    return baseTh + 990;
-  }
-  function findLastNumberToken(line){
-    const re = /\d[\d\s.,]*\d|\d/g;
-    let m, last = null;
-    while((m = re.exec(line)) !== null){
-      last = { text: m[0], index: m.index };
-    }
-    return last;
-  }
-  function parsePriceFromToken(tokenText){
-    const digits = String(tokenText || "").replace(/\D/g, "");
-    if(!digits) return null;
-    return parseInt(digits, 10);
-  }
-  function replaceToken(line, token, replacement){
-    const before = line.slice(0, token.index);
-    const after = line.slice(token.index + token.text.length);
-    return before + replacement + after;
-  }
-  function setPill(el, ok, text){
-    el.className = "pill " + (ok ? "ok" : "bad");
-    el.textContent = text;
-  }
-  function debounce(fn, delay){
-    let t = null;
-    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
-  }
-  function hotkey(handler){
-    return (e) => {
-      const isMac = (navigator.platform || "").toLowerCase().includes("mac");
-      const mod = isMac ? e.metaKey : e.ctrlKey;
-      if(mod && e.key === "Enter"){ e.preventDefault(); handler(); }
-    };
-  }
-  function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
-  function makeStamp(d){
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-  }
+// Format price with dot thousands separator + ₽
+function fmtPrice(n) {
+  return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '₽';
+}
 
-  /* ===== Tabs ===== */
-  const tabPriceBtn = $("tabPriceBtn");
-  const tabCashlessBtn = $("tabCashlessBtn");
-  const tabExcelBtn = $("tabExcelBtn");
-  const priceTab = $("priceTab");
-  const cashlessTab = $("cashlessTab");
-  const excelTab = $("excelTab");
+// Smart rounding:
+// remainder < 250  → previous thousand's 990 (base - 10)
+// remainder 250–749 → current thousand's 490 (base + 490)
+// remainder 750–999 → current thousand's 990 (base + 990)
+function roundPrice(v) {
+  if (!v || v <= 0) return 0;
+  const base = Math.floor(v / 1000) * 1000;
+  const rem = v - base;
+  if (rem < 250)       return base > 0 ? base - 10 : 990;
+  else if (rem < 750)  return base + 490;
+  else                 return base + 990;
+}
 
-  function setTab(which){
-    tabPriceBtn.classList.toggle("active", which === "price");
-    tabCashlessBtn.classList.toggle("active", which === "cashless");
-    tabExcelBtn.classList.toggle("active", which === "excel");
-    priceTab.classList.toggle("active", which === "price");
-    cashlessTab.classList.toggle("active", which === "cashless");
-    excelTab.classList.toggle("active", which === "excel");
+// Get selling (cash) price: fixed add for cheap items, % markup for expensive
+function getSellingPrice(inputPrice, markupPct) {
+  let raw;
+  if      (inputPrice < 4000)  raw = inputPrice + 1500;
+  else if (inputPrice < 10000) raw = inputPrice + 2000;
+  else if (inputPrice < 15000) raw = inputPrice + 2500;
+  else if (inputPrice < 20000) raw = inputPrice + 3000;
+  else if (inputPrice < 40000) raw = inputPrice + 4000;
+  else                         raw = inputPrice * (1 + markupPct / 100);
+  return roundPrice(raw);
+}
+
+// Find last number >= 1000 in a line
+function findPrice(line) {
+  // Match digit sequences (possibly with internal spaces from copy-paste)
+  const matches = [...line.matchAll(/\d+/g)];
+  const nums = matches.map(m => ({ val: parseInt(m[0], 10), idx: m.index, raw: m[0] }))
+                      .filter(n => n.val >= 1000);
+  return nums.length > 0 ? nums[nums.length - 1] : null;
+}
+
+// Replace last price in line
+function replacePriceInLine(line, found, newPrice) {
+  return line.slice(0, found.idx) + String(newPrice) + line.slice(found.idx + found.raw.length);
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', (i === 0 && tab === 'price') || (i === 1 && tab === 'installment'));
+  });
+  document.getElementById('tab-price').classList.toggle('active', tab === 'price');
+  document.getElementById('tab-installment').classList.toggle('active', tab === 'installment');
+}
+
+function selectMarkup(pct, btn) {
+  currentMarkup = pct;
+  document.getElementById('markupCustom').value = pct;
+  document.querySelectorAll('#markup-btns .quick-btn').forEach(b => b.classList.remove('sel-pct'));
+  if (btn) btn.classList.add('sel-pct');
+}
+
+function onCustomMarkup() {
+  const v = parseFloat(document.getElementById('markupCustom').value);
+  if (!isNaN(v) && v > 0) {
+    currentMarkup = v;
+    document.querySelectorAll('#markup-btns .quick-btn').forEach(b => {
+      b.classList.toggle('sel-pct', parseFloat(b.textContent) === v);
+    });
   }
-  tabPriceBtn.addEventListener("click", () => setTab("price"));
-  tabCashlessBtn.addEventListener("click", () => setTab("cashless"));
-  tabExcelBtn.addEventListener("click", () => setTab("excel"));
+}
 
-  /* =========================
-     TAB 1: PRICE (NEW LOGIC)
-     base = price * (1 + pct/100)
-  ========================== */
-  const inputArea = $("inputArea");
-  const outputArea = $("outputArea");
-  const convertBtn = $("convertBtn");
-  const clearBtn = $("clearBtn");
-  const exampleBtn = $("exampleBtn");
-  const copyBtn = $("copyBtn");
-  const statusPill = $("statusPill");
+function selectMonths(m, btn) {
+  currentMonths = m;
+  document.querySelectorAll('#month-btns .quick-btn').forEach(b => b.classList.remove('sel-mon'));
+  if (btn) btn.classList.add('sel-mon');
+}
 
-  const statLines = $("statLines");
-  const statFound = $("statFound");
-  const statNoPrice = $("statNoPrice");
+function calcPrice() {
+  const raw = document.getElementById('priceInput').value;
+  if (!raw.trim()) { alert('Вставьте прайс во входное поле'); return; }
 
-  const markupBtns = Array.from(document.querySelectorAll('#priceTab .markup-btn[data-pct]'));
-  const markupPill = $("markupPill");
+  const lines = raw.split('\n');
+  const result = [];
+  let count = 0;
 
-  let selectedMarkupPct = 12; // default +12%
-
-  function convertLinePrice(line){
-    const token = findLastNumberToken(line);
-    if(!token) return { line, ok:false };
-
-    const price = parsePriceFromToken(token.text);
-    if(price == null) return { line, ok:false };
-
-    const baseValue = price * (1 + (selectedMarkupPct / 100));
-    const rounded = roundRule(baseValue);
-
-    const formatted = formatRub(rounded) + "₽";
-    return { line: replaceToken(line, token, formatted), ok:true };
+  for (const line of lines) {
+    if (!line.trim()) { result.push(''); continue; }
+    const found = findPrice(line);
+    if (!found) { result.push(line); continue; }
+    const newPrice = getSellingPrice(found.val, currentMarkup);
+    result.push(replacePriceInLine(line, found, fmtPrice(newPrice)));
+    count++;
   }
 
-  function updateStats(linesCount, foundCount){
-    statLines.textContent = String(linesCount);
-    statFound.textContent = String(foundCount);
-    statNoPrice.textContent = String(Math.max(0, linesCount - foundCount));
-  }
+  document.getElementById('priceOutput').value = result.join('\n');
+  document.getElementById('stat-lines').textContent = count;
+  document.getElementById('stat-pct').textContent = currentMarkup + '%';
+  document.getElementById('priceStats').style.display = 'flex';
+}
 
-  function doConvertPrice(){
-    const lines = (inputArea.value ?? "").split(/\r?\n/);
-    let found = 0;
+function calcInstallment() {
+  const raw = document.getElementById('instInput').value;
+  if (!raw.trim()) { alert('Вставьте прайс во входное поле'); return; }
 
-    const out = lines.map(l => {
-      if(l.trim() === "") return "";
-      const res = convertLinePrice(l);
-      if(res.ok) found++;
-      return res.line;
-    }).join("\n");
+  const down = parseFloat(document.getElementById('downPay').value) || 0;
+  const months = currentMonths;
+  const lines = raw.split('\n');
+  const result = [];
+  let count = 0;
 
-    outputArea.value = out;
+  for (const line of lines) {
+    if (!line.trim()) { result.push(''); continue; }
+    const found = findPrice(line);
+    if (!found) { result.push(line); continue; }
 
-    const nonEmpty = lines.filter(l => l.trim() !== "").length;
-    updateStats(nonEmpty, found);
+    const cashPrice = found.val;
+    const fullInst = roundPrice(cashPrice * 1.25);
 
-    if(found > 0){
-      setPill(statusPill, true, "Готово");
-      copyBtn.disabled = false;
+    let financeAmt, monthly;
+    if (down > 0 && down < cashPrice) {
+      const remaining = cashPrice - down;
+      financeAmt = roundPrice(remaining * 1.25);
+      monthly = Math.ceil(financeAmt / months);
     } else {
-      setPill(statusPill, false, "Не нашёл цен");
-      copyBtn.disabled = true;
+      financeAmt = fullInst;
+      monthly = Math.ceil(fullInst / months);
     }
-  }
 
-  function setActiveMarkupButton(btn){
-    markupBtns.forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-
-    selectedMarkupPct = parseFloat(btn.dataset.pct);
-    const mult = (1 + selectedMarkupPct/100);
-    markupPill.textContent = `Выбрано: +${selectedMarkupPct}% (×${mult.toFixed(3).replace(/0+$/,'').replace(/\.$/,'')})`;
-
-    if((inputArea.value || "").trim() && (outputArea.value || "").trim()) doConvertPrice();
-  }
-
-  markupBtns.forEach(btn => btn.addEventListener("click", () => setActiveMarkupButton(btn)));
-  convertBtn.addEventListener("click", doConvertPrice);
-  inputArea.addEventListener("keydown", hotkey(doConvertPrice));
-
-  clearBtn.addEventListener("click", () => {
-    inputArea.value = "";
-    outputArea.value = "";
-    updateStats(0,0);
-    copyBtn.disabled = true;
-    setPill(statusPill, false, "Ожидаю ввод");
-  });
-
-  exampleBtn.addEventListener("click", () => {
-    inputArea.value =
-`13 128GB Midnight 🇮🇳 40.490₽
-14 128GB Midnight 🇮🇳 45.490₽
-MacBook Air 13 69000🇺🇸`;
-  });
-
-  copyBtn.addEventListener("click", async () => {
-    try{
-      await navigator.clipboard.writeText(outputArea.value);
-      setPill(statusPill, true, "Скопировано");
-      setTimeout(() => setPill(statusPill, true, "Готово"), 700);
-    }catch(e){
-      setPill(statusPill, false, "Не удалось скопировать");
-    }
-  });
-
-  /* =========================
-     TAB 2: CASHLESS (as before)
-  ========================== */
-  const downpayInput = $("downpayInput");
-  const cashlessPercent = $("cashlessPercent");
-  const cashlessRulePill = $("cashlessRulePill");
-
-  const cashlessInput = $("cashlessInput");
-  const cashlessOutput = $("cashlessOutput");
-  const cashlessCalcBtn = $("cashlessCalcBtn");
-  const cashlessClearBtn = $("cashlessClearBtn");
-  const cashlessExampleBtn = $("cashlessExampleBtn");
-  const cashlessCopyBtn = $("cashlessCopyBtn");
-  const cashlessStatusPill = $("cashlessStatusPill");
-  const monthsPill = $("monthsPill");
-
-  const monthsBtns = Array.from(document.querySelectorAll('#cashlessTab .markup-btn[data-months]'));
-  let selectedMonths = null;
-
-  function currentPercent(){
-    const v = parseFloat(String(cashlessPercent.value || "0").replace(",", "."));
-    return (isFinite(v) && v >= 0) ? Math.round(v) : 0;
-  }
-  function refreshCashlessPill(){
-    cashlessRulePill.textContent = `+${currentPercent()}%`;
-  }
-  function cashlessCalc(cash, downpay, percent){
-    const remaining = Math.max(0, cash - downpay);
-    const base = remaining * (1 + (percent / 100));
-    const sum = roundRule(base);
-    return { sum };
-  }
-  function monthly(sum, months){
-    if(!months || sum <= 0) return 0;
-    return Math.ceil(sum / months);
-  }
-  function convertLineCashless(line, downpay, months, percent){
-    const token = findLastNumberToken(line);
-    if(!token) return { line, ok:false };
-    const cash = parsePriceFromToken(token.text);
-    if(cash == null) return { line, ok:false };
-
-    const { sum } = cashlessCalc(cash, downpay, percent);
-    const sumFmt = formatRub(sum) + "₽";
-    let newLine = replaceToken(line, token, sumFmt);
-
-    if(months){
-      const mp = monthly(sum, months);
-      const mpFmt = formatRub(mp) + "₽/мес";
-      newLine += `  |  ${months}м: ${mpFmt}`;
-    }
-    return { line: newLine, ok:true };
-  }
-  function doCashless(){
-    const dp = parseMoneyDigits(downpayInput.value);
-    const pct = currentPercent();
-    cashlessPercent.value = String(pct);
-    refreshCashlessPill();
-
-    const lines = (cashlessInput.value ?? "").split(/\r?\n/);
-    let found = 0;
-    const out = lines.map(l => {
-      if(l.trim() === "") return "";
-      const res = convertLineCashless(l, dp, selectedMonths, pct);
-      if(res.ok) found++;
-      return res.line;
-    }).join("\n");
-
-    cashlessOutput.value = out;
-
-    if(found > 0){
-      setPill(cashlessStatusPill, true, "Готово");
-      cashlessCopyBtn.disabled = false;
+    const fmtN = n => fmtPrice(n);
+    let suffix;
+    if (down > 0 && down < cashPrice) {
+      suffix = ` | 🔄 ${fmtN(fullInst)} | Взнос: ${fmtN(down)} | К оплате: ${fmtN(financeAmt)} | ${months}мес. → ${fmtN(monthly)}/мес.`;
     } else {
-      setPill(cashlessStatusPill, false, "Не нашёл цен");
-      cashlessCopyBtn.disabled = true;
+      suffix = ` | 🔄 ${fmtN(fullInst)} | ${months}мес. → ${fmtN(monthly)}/мес.`;
     }
-  }
-  function setActiveMonths(btn){
-    monthsBtns.forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    selectedMonths = parseInt(btn.dataset.months, 10);
-    monthsPill.textContent = "Выбрано: " + selectedMonths + " мес";
-    if((cashlessInput.value || "").trim() && (cashlessOutput.value || "").trim()) doCashless();
-  }
-  monthsBtns.forEach(btn => btn.addEventListener("click", () => setActiveMonths(btn)));
-  cashlessCalcBtn.addEventListener("click", doCashless);
-  cashlessInput.addEventListener("keydown", hotkey(doCashless));
-  cashlessClearBtn.addEventListener("click", () => {
-    downpayInput.value = "";
-    cashlessInput.value = "";
-    cashlessOutput.value = "";
-    cashlessCopyBtn.disabled = true;
-    selectedMonths = null;
-    monthsBtns.forEach(b => b.classList.remove("active"));
-    monthsPill.textContent = "Срок не выбран";
-    refreshCashlessPill();
-    setPill(cashlessStatusPill, false, "Ожидаю ввод");
-  });
-  cashlessExampleBtn.addEventListener("click", () => {
-    downpayInput.value = "50 000";
-    cashlessPercent.value = "25";
-    refreshCashlessPill();
-    selectedMonths = null;
-    monthsBtns.forEach(b => b.classList.remove("active"));
-    monthsPill.textContent = "Срок не выбран";
-    cashlessInput.value = `iPhone 15 Pro Max 100000\nMacBook Air 13 84990\nAirPods 4 19990`;
-  });
-  cashlessCopyBtn.addEventListener("click", async () => {
-    try{
-      await navigator.clipboard.writeText(cashlessOutput.value);
-      setPill(cashlessStatusPill, true, "Скопировано");
-      setTimeout(() => setPill(cashlessStatusPill, true, "Готово"), 700);
-    }catch(e){
-      setPill(cashlessStatusPill, false, "Не удалось скопировать");
-    }
-  });
-  cashlessPercent.addEventListener("input", debounce(() => {
-    cashlessPercent.value = String(currentPercent());
-    refreshCashlessPill();
-    if((cashlessInput.value || "").trim() && (cashlessOutput.value || "").trim()) doCashless();
-  }, 80));
-  downpayInput.addEventListener("blur", () => {
-    const v = parseMoneyDigits(downpayInput.value);
-    downpayInput.value = v ? String(v).replace(/\B(?=(\d{3})+(?!\d))/g, " ") : "";
-  });
-  refreshCashlessPill();
 
-  /* =========================
-     TAB 3: EXCEL (оставил как было в вашей последней версии)
-     ВАЖНО: Здесь должен быть ваш текущий Excel-генератор.
-     Если у вас уже стоит новая логика "заголовок модели -> цвета", оставьте её.
-     Ниже — минимальная заглушка (чтобы файл был валидным), замените на вашу Excel-логику.
-  ========================== */
-  const TEMPLATE_BASE = "./";
-  const excelInput = $("excelInput");
-  const excelStatus = $("excelStatus");
-  const excelStats = $("excelStats");
-  const excelExampleBtn = $("excelExampleBtn");
-  const btnAll = $("btnAll");
-  const btn13 = $("btn13");
-  const btn14 = $("btn14");
-  const btn15 = $("btn15");
-  const btn16 = $("btn16");
-  const btn17sim = $("btn17sim");
-  const btn17esim = $("btn17esim");
-
-  // Если у вас уже был Excel код — вставьте его сюда вместо заглушки.
-  function excelStub(){
-    setPill(excelStatus, false, "Вставьте ваш Excel-генератор (последняя версия) в этот блок.");
-    excelStats.textContent = "—";
+    result.push(line + suffix);
+    count++;
   }
-  btnAll.addEventListener("click", excelStub);
-  btn13.addEventListener("click", excelStub);
-  btn14.addEventListener("click", excelStub);
-  btn15.addEventListener("click", excelStub);
-  btn16.addEventListener("click", excelStub);
-  btn17sim.addEventListener("click", excelStub);
-  btn17esim.addEventListener("click", excelStub);
-  excelExampleBtn.addEventListener("click", () => {
-    excelInput.value = `13 128GB Midnight 🇮🇳 40.490₽\n14 128GB Midnight 🇮🇳 45.490₽`;
-    setPill(excelStatus, false, "Ожидаю ввод");
-    excelStats.textContent = "—";
-  });
 
-})();
+  document.getElementById('instOutput').value = result.join('\n');
+  document.getElementById('stat-inst-lines').textContent = count;
+  document.getElementById('stat-months').textContent = months + ' мес.';
+  document.getElementById('instStats').style.display = 'flex';
+}
+
+function copyText(id) {
+  const el = document.getElementById(id);
+  if (!el.value) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(el.value)
+      .then(() => showToast())
+      .catch(() => fallbackCopy(el));
+  } else {
+    fallbackCopy(el);
+  }
+}
+
+function fallbackCopy(el) {
+  el.removeAttribute('readonly');
+  el.select();
+  el.setSelectionRange(0, 99999);
+  try {
+    document.execCommand('copy');
+    showToast();
+  } catch(e) {
+    alert('Не удалось скопировать. Выделите текст вручную и нажмите Ctrl+C');
+  }
+  el.setAttribute('readonly', true);
+  if (window.getSelection) window.getSelection().removeAllRanges();
+}
+
+function showToast() {
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 'Enter') {
+    if (document.getElementById('tab-price').classList.contains('active')) calcPrice();
+    else calcInstallment();
+  }
+});
 </script>
 </body>
 </html>
