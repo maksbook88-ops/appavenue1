@@ -304,7 +304,7 @@
 
     <div class="sec-label">Наценка — быстрый выбор</div>
     <div class="quick-row" id="markup-btns">
-      <button class="quick-btn sel-pct" onclick="selectMarkup(5.5,this)">+5.5%</button>
+      <button class="quick-btn" onclick="selectMarkup(5.5,this)">+5.5%</button>
       <button class="quick-btn" onclick="selectMarkup(6,this)">+6%</button>
       <button class="quick-btn" onclick="selectMarkup(8,this)">+8%</button>
       <button class="quick-btn" onclick="selectMarkup(10,this)">+10%</button>
@@ -316,7 +316,7 @@
     <div class="pct-row">
       <span class="pct-label">Своя наценка:</span>
       <div class="pct-input-wrap">
-        <input type="number" id="markupCustom" value="5.5" min="1" max="999" oninput="onCustomMarkup()" />
+        <input type="number" id="markupCustom" value="" min="1" max="999" oninput="onCustomMarkup()" />
         <span class="unit">%</span>
       </div>
     </div>
@@ -406,7 +406,7 @@
 <div class="toast" id="toast">✓ Скопировано!</div>
 
 <script>
-let currentMarkup = 5.5;
+let currentMarkup = 0;
 let currentMonths = 0;
 let currentInstPct = 25;
 
